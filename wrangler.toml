@@ -1,0 +1,22 @@
+# ============================================================
+# FOM Security — Static HTML on Cloudflare
+# ============================================================
+# Static-only deployment: no Worker script, just HTML files.
+# API calls remain hardcoded to fom-security.foinventory.workers.dev
+# (no code changes to FOM HTML needed).
+#
+# Deploy: cd to this folder, run `npx wrangler deploy`
+# ============================================================
+
+name = "fom-static"
+compatibility_date = "2026-04-17"
+
+# ── Static Assets (FOM HTML files) ─────────────────────────
+[assets]
+directory = "."
+not_found_handling = "single-page-application"
+
+# ── Custom Domain ──────────────────────────────────────────
+[[routes]]
+pattern = "fom.castellan-security.com"
+custom_domain = true
