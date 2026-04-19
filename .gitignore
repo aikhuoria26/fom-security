@@ -1,0 +1,29 @@
+# Windows system files
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS system files (if anyone edits on Mac)
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor temporary / backup files
+*~
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Node / build artifacts (in case anyone adds tooling later)
+node_modules/
+dist/
+build/
+.env
+.env.local
+
+# OS junk
+*.log
