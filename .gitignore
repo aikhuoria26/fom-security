@@ -27,3 +27,18 @@ build/
 
 # OS junk
 *.log
+
+# Backup files — never commit working-state backups to the deploy repo
+*.backup
+*.backup-*
+*.bak
+*.orig
+*-before-*.html
+*-before-*.js
+*-before-*.json
+
+# Cloudflare Worker config — belongs in the Worker repo, not the static site repo
+wrangler.toml
+wrangler.jsonc
+.wrangler/
+.dev.vars
