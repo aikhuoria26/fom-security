@@ -508,6 +508,7 @@ function switchTab(tab){
 }
 
 function activeData(){return _activeTab==='next'?N:D;}
+var X=D;window.X=D;  // global X reference — kept in sync by render()
 
 function saveNextDraft(){
   try{localStorage.setItem('fom_daily_posting_next',JSON.stringify(N));}catch(e){}
@@ -555,7 +556,7 @@ function checkNextShiftTab(){
 
 function render(){
   var root=document.getElementById('form-root');
-  var X=activeData();var h='';
+  X=activeData();window.X=X;var h='';
   // Show banner when on next-shift tab
   if(_activeTab==='next'){h+='<div class="next-shift-banner">⏭️ Editing <strong>Next Shift: '+nextShiftLabel(X.shift)+' Shift</strong> — Save saves as draft, does not affect current shift. <button onclick="promoteNextShift()" style="margin-left:10px;padding:4px 10px;background:#c9a84c;color:#0f1a2e;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:11px">▲ Promote to Current</button></div>';}
 
