@@ -422,7 +422,7 @@ function render(){
   var personnel    = ls('fom_personnel',[]);
   var deskOfficer  = raw('fom_deskOfficer');
   var currentDate  = raw('fom_currentDate');
-  var shift        = raw('fom_shift');
+  var shift        = raw('fom_shift') || (ls('fom_security_summary',{}).shift||'');
   var weather      = ls('fom_weather',{});
   var secKeys      = ls('fom_securityKeys',[]);
   var supRadios    = ls('fom_supervisorRadios',[]);
