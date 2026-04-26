@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOM Command Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0b1120;
+    --card: #111827;
+    --border: rgba(255,255,255,0.09);
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --subtle: #94a3b8;
+    --accent: #c9a84c;
+    --green: #4ade80;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --amber: #fbbf24;
+    --pink: #f472b6;
+    --red: #f87171;
+    --teal: #2dd4bf;
+  }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; }
+
+  /* ── Header ── */
+  #header {
+    position: sticky; top: 0; z-index: 100;
+    background: linear-gradient(135deg, #0a1830 0%, #1e3a5f 60%, rgba(201,168,76,0.08) 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+  }
+  #header .left { display: flex; align-items: center; gap: 14px; }
+  #header h1 { font-size: 16px; font-weight: 800; color: #fff; }
+  #header .sub { font-size: 11px; color: var(--subtle); }
+  #header .right { display: flex; align-items: center; gap: 16px; }
+  #clock { font-size: 20px; font-weight: 800; color: var(--accent); }
+  #weather-display { font-size: 11px; color: var(--subtle); }
+  #back-btn {
+    background: rgba(255,255,255,0.08); border: 1px solid var(--border);
+    color: var(--text); padding: 6px 14px; border-radius: 6px;
+    cursor: pointer; font-size: 12px; font-weight: 600; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: background 0.15s;
+  }
+  #back-btn:hover { background: rgba(255,255,255,0.14); }
+  #refresh-btn {
+    background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.3);
+    color: var(--accent); padding: 6px 14px; border-radius: 6px;
+    cursor: pointer; font-size: 12px; font-weight: 600;
+    transition: background 0.15s;
+  }
+  #refresh-btn:hover { background: rgba(201,168,76,0.22); }
+
+  /* ── Layout ── */
+  #main { max-width: 1500px; margin: 0 auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+  /* ── Info bar ── */
+  #info-bar {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 18px;
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+  }
+  .info-item .label { font-size: 9px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
+  .info-item .value { font-size: 13px; font-weight: 700; color: var(--text); margin-top: 3px; }
+
+  /* ── Metric strip ── */
+  #metrics { display: grid; grid-template-columns: repeat(8,1fr); gap: 8px; }
+  .metric {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 6px; text-align: center;
+    border-top: 3px solid transparent;
+  }
+  .metric .val { font-size: 26px; font-weight: 700; line-height: 1; }
+  .metric .lbl { font-size: 9px; color: var(--muted); font-weight: 700; margin-top: 4px; text-transform: uppercase; letter-spacing: .06em; }
+
+  /* ── Grid rows ── */
+  .row-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; }
+  .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .row-2-eq { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .col { display: flex; flex-direction: column; gap: 10px; }
+
+  /* ── Card ── */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px;
+  }
+  .card-title {
+    font-size: 10px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px;
+  }
+  .card-sub { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 6px; }
+
+  /* ── Roster table ── */
+  #roster-table { width: 100%; border-collapse: collapse; }
+  #roster-table th {
+    text-align: left; padding: 3px 6px; font-size: 9px;
+    font-weight: 700; color: var(--muted); text-transform: uppercase;
+    letter-spacing: .06em; border-bottom: 1px solid var(--border);
+  }
+  #roster-table td { padding: 5px 6px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  #roster-table tr:last-child td { border-bottom: none; }
+  .name-cell { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .sup-tag {
+    font-size: 9px; background: rgba(201,168,76,0.2); color: var(--accent);
+    border-radius: 3px; padding: 1px 4px; font-weight: 700;
+  }
+
+  /* ── List rows ── */
+  .list-row {
+    display: flex; align-items: center; gap: 6px; padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 12px;
+  }
+  .list-row:last-child { border-bottom: none; }
+  .list-row .flex1 { flex: 1; }
+  .list-row .right-val { color: var(--subtle); font-size: 11px; }
+
+  /* ── Dot ── */
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0; display: inline-block;
+  }
+
+  /* ── Chip ── */
+  .chip {
+    font-size: 10px; font-weight: 700; padding: 2px 7px;
+    border-radius: 4px; white-space: nowrap;
+  }
+
+  /* ── OOS bar ── */
+  #oos-bar {
+    background: rgba(239,68,68,0.07);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-left: 4px solid var(--red);
+    border-radius: 10px; padding: 10px 14px;
+  }
+  #oos-bar .oos-title {
+    font-size: 10px; font-weight: 700; color: var(--red);
+    text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px;
+  }
+  #oos-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  /* ── Last updated ── */
+  #last-updated { text-align: center; font-size: 10px; color: var(--muted); padding: 4px 0 8px; }
+
+  /* ── No-data ── */
+  .no-data { color: var(--muted); font-size: 12px; padding: 8px 0; }
+
+  /* ── Badge grid ── */
+  #badge-grid { display: grid; grid-template-columns: repeat(8,1fr); gap: 4px; }
+  .badge-cell {
+    text-align: center; font-size: 11px; font-weight: 700;
+    padding: 5px 2px; border-radius: 4px; border: 1px solid var(--border);
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    #metrics { grid-template-columns: repeat(4,1fr); }
+    .row-2, .row-3, .row-2-eq { grid-template-columns: 1fr; }
+    #info-bar { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="header">
+  <div class="left">
+    <div>
+      <h1>⚡ FOM Command Dashboard</h1>
+      <div class="sub" id="date-sub">Loading…</div>
+    </div>
+  </div>
+  <div class="right">
+    <div>
+      <div id="clock">--:--</div>
+      <div id="weather-display"></div>
+    </div>
+    <button id="refresh-btn" onclick="renderDashboard()">↺ Refresh</button>
+    <a href="desktop.html" id="back-btn">← Back to FOM</a>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- Info bar -->
+  <div id="info-bar">
+    <div class="info-item"><div class="label">Supervisor</div><div class="value" id="ib-supervisor">—</div></div>
+    <div class="info-item"><div class="label">Desk Officer</div><div class="value" id="ib-desk">—</div></div>
+    <div class="info-item"><div class="label">Shift Time</div><div class="value" id="ib-shifttime">—</div></div>
+    <div class="info-item"><div class="label">Shift</div><div class="value" id="ib-shift">—</div></div>
+    <div class="info-item"><div class="label">Officers On Duty</div><div class="value" style="color:var(--green);" id="ib-onduty">0</div></div>
+  </div>
+
+  <!-- Metrics -->
+  <div id="metrics">
+    <div class="metric" id="m-onduty">   <div class="val" style="color:var(--green);">0</div> <div class="lbl">On Duty</div></div>
+    <div class="metric" id="m-onpost">   <div class="val" style="color:var(--blue);">0</div>  <div class="lbl">On Post</div></div>
+    <div class="metric" id="m-break">    <div class="val" style="color:var(--amber);">0</div> <div class="lbl">On Break</div></div>
+    <div class="metric" id="m-radios">   <div class="val" style="color:var(--purple);">0</div><div class="lbl">Radios Out</div></div>
+    <div class="metric" id="m-keys">     <div class="val" style="color:var(--amber);">0</div> <div class="lbl">Keys Out</div></div>
+    <div class="metric" id="m-recs">     <div class="val" style="color:var(--pink);">0</div>  <div class="lbl">Recorders</div></div>
+    <div class="metric" id="m-booscount"><div class="val" style="color:var(--red);">0</div>   <div class="lbl">Badges OOS</div></div>
+    <div class="metric" id="m-totoos">   <div class="val" style="color:var(--green);">0</div> <div class="lbl">Total OOS</div></div>
+  </div>
+
+  <!-- Row 1: Roster + Equipment -->
+  <div class="row-2">
+    <!-- Roster -->
+    <div class="card">
+      <div class="card-title">Officer Roster <span class="card-sub" id="roster-sub"></span></div>
+      <table id="roster-table">
+        <thead><tr>
+          <th>Officer</th><th>Post</th><th>Radio</th><th>Key</th><th>Rec</th><th>Badge</th>
+        </tr></thead>
+        <tbody id="roster-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Equipment col -->
+    <div class="col">
+      <!-- Radios -->
+      <div class="card">
+        <div class="card-title">Radios <span class="card-sub" id="radio-sub"></span></div>
+        <div id="radio-list"></div>
+      </div>
+      <!-- Keys -->
+      <div class="card">
+        <div class="card-title">Security Keys <span class="card-sub" id="key-sub"></span></div>
+        <div id="key-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: Recorders + Notes + Tasks -->
+  <div class="row-3">
+    <div class="card">
+      <div class="card-title">Recorders <span class="card-sub" id="rec-sub"></span></div>
+      <div id="rec-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Shift Notes</div>
+      <div id="notes-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Secondary Tasks</div>
+      <div id="tasks-list"></div>
+    </div>
+  </div>
+
+  <!-- Row 3: Other Radios + Access + Flashlights -->
+  <div class="row-3">
+    <div class="card">
+      <div class="card-title">Management & Other Radios <span class="card-sub" id="other-radio-sub"></span></div>
+      <div id="other-radio-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Flashlights</div>
+      <div id="flash-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Access & Other Items</div>
+      <div id="other-items-list"></div>
+    </div>
+  </div>
+
+  <!-- OOS Bar (hidden when none) -->
+  <div id="oos-bar" style="display:none;">
+    <div class="oos-title" id="oos-title">⚠ Out of Service</div>
+    <div id="oos-chips"></div>
+  </div>
+
+  <!-- Last updated -->
+  <div id="last-updated"></div>
+
+</div><!-- /main -->
+
+<script>
+// ── Helpers ───────────────────────────────────────────────────────────────
+function ls(key, fallback) {
+  try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch(e) { return fallback; }
+}
+function raw(key) { return localStorage.getItem(key) || ''; }
+
+function sn(n) {
+  if (!n) return '—';
+  n = n.replace(/^(Dir\.|AD\.|Lt\.|Sgt\.|Ofc\.)\s*/i, '').replace(/\s*\([^)]*\)\s*/g, ' ').trim();
+  if (n.indexOf(',') >= 0) return n.split(',')[0].trim();
+  var p = n.split(/\s+/);
+  return p.length > 1 ? p[p.length-1] : p[0];
+}
+
+function dot(color) {
+  return '<span class="dot" style="background:'+color+';"></span>';
+}
+function chip(txt, col, bg) {
+  return '<span class="chip" style="color:'+col+';background:'+bg+';">'+txt+'</span>';
+}
+function listRow(left, right, last) {
+  return '<div class="list-row'+(last?' style="border-bottom:none"':'')+'">'+left+'<span class="right-val">'+right+'</span></div>';
+}
+function noData(msg) {
+  return '<div class="no-data">'+(msg||'None')+'</div>';
+}
+
+function shiftTime(s) {
+  return s==='Morning'?'07:00–15:00':s==='Evening'?'15:00–23:00':s==='Night'?'23:00–07:00':s||'—';
+}
+
+function nowET() {
+  try { return new Date().toLocaleString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',hour12:false}); } catch(e) { return new Date().toTimeString().slice(0,5); }
+}
+
+// ── Main render ───────────────────────────────────────────────────────────
+var SUP_ROLES = ['Dir/AD/Lt','Sergeant','OIC','Lieutenant','Director of Security','Assistant Director','Director','Developer'];
+
+function renderDashboard() {
+  // Load data
+  var personnel    = ls('fom_personnel', []);
+  var deskOfficer  = raw('fom_deskOfficer');
+  var currentDate  = raw('fom_currentDate');
+  var shift        = raw('fom_shift');
+  var weather      = ls('fom_weather', {temp:'',conditions:''});
+  var secKeys      = ls('fom_securityKeys', []);
+  var supRadios    = ls('fom_supervisorRadios', []);
+  var offRadios    = ls('fom_officerRadios', []);
+  var otherRadios  = ls('fom_otherRadios', []);
+  var recorders    = ls('fom_recorders', []);
+  var flashlights  = ls('fom_flashlights', []);
+  var notes        = ls('fom_notes', []);
+  var tasks        = ls('fom_secondaryTasks', []);
+  var oosState     = ls('fom_oos_state', {});
+  var oosIds       = (oosState && oosState.badges) || [];
+  var otherKeys    = ls('fom_otherKeys', []);
+  var accessBadges = ls('fom_accessBadges', []);
+  var satPhones    = ls('fom_satPhones', []);
+
+  // Derived
+  var active   = personnel.filter(function(p){ return p.name; });
+  var allRadios = supRadios.concat(offRadios).concat(otherRadios);
+  var onBreak  = active.filter(function(p){ return p.posts && p.posts.some(function(pp){ return pp.isBreak; }); }).length;
+  var onPost   = active.filter(function(p){ return p.posts && p.posts.some(function(pp){ return pp.post && !pp.isBreak; }); }).length;
+  var radiosOut = allRadios.filter(function(r){ return r.assignedTo && !r.oos; }).length;
+  var radiosOOS = allRadios.filter(function(r){ return r.oos; }).length;
+  var radiosAvail = allRadios.filter(function(r){ return !r.assignedTo && !r.oos; }).length;
+  var keysOut  = secKeys.filter(function(k){ return k.assignedTo && !k.oos; }).length;
+  var keysOOS  = secKeys.filter(function(k){ return k.oos; }).length;
+  var keysAvail = secKeys.filter(function(k){ return !k.assignedTo && !k.oos; }).length;
+  var recsOut  = recorders.filter(function(r){ return r.assignedTo && !r.oos; }).length;
+  var recsOOS  = recorders.filter(function(r){ return r.oos; }).length;
+  var badgesOOS = oosIds.length;
+  var totalOOS = keysOOS + radiosOOS + recsOOS + badgesOOS;
+  var otherKeysOut = otherKeys.filter(function(k){ return !k.available && k.assignedTo; }).length;
+  var accessBadgesOut = accessBadges.filter(function(a){ return !a.available && !a.oos; }).length;
+  var satPhonesOut = satPhones.filter(function(s){ return !s.available && !s.oos; }).length;
+
+  var supNames = active.filter(function(p){ return SUP_ROLES.indexOf(p.role)>=0 && p.role!=='OIC'; })
+    .map(function(p){ return sn(p.name); }).join(' / ') || '—';
+
+  // ── Header info ──
+  var dateStr = currentDate ? (function(){
+    try { return new Date(currentDate+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}); } catch(e){ return currentDate; }
+  }()) : 'No date set';
+  document.getElementById('date-sub').textContent = dateStr + ' · ' + shift + ' Shift';
+  document.getElementById('weather-display').textContent = weather.temp ? (weather.temp + (weather.conditions ? ' · ' + weather.conditions : '')) : '';
+
+  // ── Info bar ──
+  document.getElementById('ib-supervisor').textContent = supNames;
+  document.getElementById('ib-desk').textContent = deskOfficer || '—';
+  document.getElementById('ib-shifttime').textContent = shiftTime(shift);
+  document.getElementById('ib-shift').textContent = shift || '—';
+  document.getElementById('ib-onduty').textContent = active.length;
+
+  // ── Metrics ──
+  function setMetric(id, val, warn) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.querySelector('.val').textContent = val;
+    el.style.borderTopColor = warn ? 'var(--red)' : el.querySelector('.val').style.color;
+  }
+  setMetric('m-onduty', active.length, false);
+  setMetric('m-onpost', onPost, false);
+  setMetric('m-break', onBreak, false);
+  setMetric('m-radios', radiosOut, false);
+  setMetric('m-keys', keysOut, false);
+  setMetric('m-recs', recsOut, false);
+  setMetric('m-booscount', badgesOOS, badgesOOS > 0);
+  var toosEl = document.getElementById('m-totoos');
+  if (toosEl) {
+    toosEl.querySelector('.val').textContent = totalOOS;
+    toosEl.querySelector('.val').style.color = totalOOS > 0 ? 'var(--red)' : 'var(--green)';
+    toosEl.style.borderTopColor = totalOOS > 0 ? 'var(--red)' : 'var(--green)';
+  }
+
+  // ── Roster ──
+  document.getElementById('roster-sub').textContent = '(' + active.length + ' active)';
+  var rBody = '';
+  active.forEach(function(p) {
+    var isSup   = SUP_ROLES.indexOf(p.role) >= 0;
+    var isBreak = p.posts && p.posts.some(function(pp){ return pp.isBreak; });
+    var posts   = (p.posts||[]).filter(function(pp){ return pp.post && !pp.isBreak; }).map(function(pp){ return pp.post; }).join(', ') || '—';
+    rBody += '<tr>'+
+      '<td><div class="name-cell">'+dot(isBreak?'var(--amber)':'var(--green)')+(isSup?'<span class="sup-tag">SUP</span>':'')+
+        '<span style="font-weight:600;font-size:12px;">'+sn(p.name)+'</span></div></td>'+
+      '<td style="color:var(--subtle);font-size:11px;">'+(isBreak?'🔴 Break':posts)+'</td>'+
+      '<td style="color:var(--subtle);font-size:11px;">'+(p.radio||'—')+'</td>'+
+      '<td style="color:var(--subtle);font-size:11px;">'+(p.key||'—')+'</td>'+
+      '<td style="color:var(--subtle);font-size:11px;">'+(p.recorder||'—')+'</td>'+
+      '<td style="color:var(--subtle);font-size:11px;">'+(p.badge||'—')+'</td>'+
+    '</tr>';
+  });
+  document.getElementById('roster-body').innerHTML = rBody || '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:14px;font-size:12px;">No officers on duty</td></tr>';
+
+  // ── Radios ──
+  document.getElementById('radio-sub').textContent = radiosOut+' out · '+radiosAvail+' avail · '+radiosOOS+' OOS';
+  var radioHTML = '';
+  supRadios.concat(offRadios).filter(function(r){ return r.assignedTo && !r.oos; }).forEach(function(r){
+    radioHTML += listRow(dot('var(--purple)')+'<span class="flex1">Radio '+r.id+'</span>', sn(r.assignedTo));
+  });
+  allRadios.filter(function(r){ return r.oos; }).forEach(function(r){
+    radioHTML += listRow(dot('var(--red)')+'<span class="flex1" style="color:var(--red);">Radio '+r.id+'</span>', chip('OOS','#fff','#7f1d1d'));
+  });
+  document.getElementById('radio-list').innerHTML = radioHTML || noData('None assigned');
+
+  // ── Keys ──
+  document.getElementById('key-sub').textContent = keysOut+' out · '+keysAvail+' avail · '+keysOOS+' OOS';
+  var keyHTML = '';
+  secKeys.filter(function(k){ return k.assignedTo && !k.oos; }).forEach(function(k){
+    keyHTML += listRow(dot('var(--amber)')+'<span class="flex1">Key '+k.number+'</span>', sn(k.assignedTo));
+  });
+  secKeys.filter(function(k){ return k.oos; }).forEach(function(k){
+    keyHTML += listRow(dot('var(--red)')+'<span class="flex1" style="color:var(--red);">Key '+k.number+'</span>', chip('OOS','#fff','#7f1d1d'));
+  });
+  document.getElementById('key-list').innerHTML = keyHTML || noData('None assigned');
+
+  // ── Recorders ──
+  document.getElementById('rec-sub').textContent = recsOut+' out · '+recsOOS+' OOS';
+  var recHTML = '';
+  recorders.forEach(function(r, i) {
+    var isOOS=!!r.oos, isOut=!!r.assignedTo&&!r.oos;
+    var col = isOOS?'var(--red)':isOut?'var(--pink)':'var(--green)';
+    var right = isOOS ? chip('OOS','#fff','#7f1d1d') : isOut ? '<span style="color:var(--subtle);">'+sn(r.assignedTo)+'</span>' : chip('Avail','#065f46','#d1fae5');
+    recHTML += listRow(dot(col)+'<span class="flex1">Recorder '+r.id+'</span>', right, i===recorders.length-1);
+  });
+  document.getElementById('rec-list').innerHTML = recHTML || noData();
+
+  // ── Notes ──
+  var notesHTML = '';
+  if (notes.length) {
+    notes.forEach(function(n, i){
+      notesHTML += '<div style="display:flex;gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:12px;line-height:1.5;'+(i===notes.length-1?'border:none':'')+'"><span style="color:var(--accent);font-weight:700;">•</span><span>'+n+'</span></div>';
+    });
+  } else { notesHTML = noData('No notes for this shift'); }
+  document.getElementById('notes-list').innerHTML = notesHTML;
+
+  // ── Tasks ──
+  var tasksHTML = '';
+  if (tasks.length) {
+    tasks.forEach(function(t, i){
+      tasksHTML += '<div style="padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06);'+(i===tasks.length-1?'border:none':'')+'">'+
+        '<div style="font-size:12px;font-weight:600;">'+t.task+'</div>'+
+        (t.detail?'<div style="font-size:11px;color:var(--subtle);">'+t.detail+'</div>':'')+
+        (t.callSign?'<div style="font-size:11px;color:var(--accent);">'+t.callSign+'</div>':'')+
+      '</div>';
+    });
+  } else { tasksHTML = noData('No secondary tasks'); }
+  document.getElementById('tasks-list').innerHTML = tasksHTML;
+
+  // ── Other radios ──
+  var assigned = otherRadios.filter(function(r){ return r.assignedTo && !r.oos; }).length;
+  document.getElementById('other-radio-sub').textContent = assigned + ' assigned';
+  var orHTML = '';
+  otherRadios.forEach(function(r, i) {
+    var isOOS = !!r.oos, hasHolder = !!r.assignedTo;
+    var col = isOOS ? 'var(--red)' : hasHolder ? 'var(--purple)' : 'var(--green)';
+    var right = r.assignedTo || (isOOS ? chip('OOS','#fff','#7f1d1d') : '<span style="color:var(--muted);">Avail</span>');
+    orHTML += listRow(dot(col)+'<span class="flex1">Radio '+r.id+'</span>', right, i===otherRadios.length-1);
+  });
+  document.getElementById('other-radio-list').innerHTML = orHTML || noData();
+
+  // ── Flashlights ──
+  var flHTML = '';
+  flashlights.forEach(function(f, i) {
+    var isOOS = !!f.oos && !f.permanent;
+    var isPerm = !!f.permanent;
+    var isOut  = !!f.assignedTo && !f.permanent;
+    var isAvail = !f.assignedTo && !isOOS && !isPerm;
+    var col = isOOS ? 'var(--red)' : isPerm ? 'var(--blue)' : isOut ? 'var(--amber)' : 'var(--green)';
+    var right;
+    if (isOOS) right = chip('OOS','#fff','#7f1d1d');
+    else if (isPerm) right = '<span style="color:var(--blue);">'+(f.assignedTo||'—')+' (permanent)</span>';
+    else if (isOut) right = '<span style="color:var(--subtle);">'+sn(f.assignedTo)+'</span>';
+    else right = chip('Avail','#065f46','#d1fae5');
+    flHTML += listRow(dot(col)+'<span class="flex1">Flashlight '+f.id+'</span>', right, i===flashlights.length-1);
+  });
+  document.getElementById('flash-list').innerHTML = flHTML || noData();
+
+  // ── Other items ──
+  var oiHTML =
+    listRow(dot('var(--teal)')+'<span class="flex1">Other keys out</span>', '<span style="font-weight:700;color:var(--teal);">'+otherKeysOut+'</span>')+
+    listRow(dot('var(--blue)')+'<span class="flex1">Access badges out</span>', '<span style="font-weight:700;color:var(--blue);">'+accessBadgesOut+'</span>')+
+    listRow(dot('var(--purple)')+'<span class="flex1">Sat phones out</span>', '<span style="font-weight:700;color:var(--purple);">'+satPhonesOut+'</span>', true);
+  document.getElementById('other-items-list').innerHTML = oiHTML;
+
+  // ── OOS bar ──
+  var oosBar = document.getElementById('oos-bar');
+  if (totalOOS > 0) {
+    oosBar.style.display = 'block';
+    document.getElementById('oos-title').textContent = '⚠ Out of Service — ' + totalOOS + ' item' + (totalOOS !== 1 ? 's' : '');
+    var chips = [];
+    secKeys.filter(function(k){ return k.oos; }).forEach(function(k){ chips.push(chip('Key '+k.number,'#fff','#7f1d1d')); });
+    allRadios.filter(function(r){ return r.oos; }).forEach(function(r){ chips.push(chip('Radio '+r.id,'#fff','#7f1d1d')); });
+    recorders.filter(function(r){ return r.oos; }).forEach(function(r){ chips.push(chip('Rec '+r.id,'#fff','#7f1d1d')); });
+    oosIds.forEach(function(id){ chips.push(chip('Badge '+id,'#fff','#7f1d1d')); });
+    document.getElementById('oos-chips').innerHTML = chips.join(' ');
+  } else {
+    oosBar.style.display = 'none';
+  }
+
+  // ── Last updated ──
+  document.getElementById('last-updated').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+}
+
+// ── Clock ─────────────────────────────────────────────────────────────────
+function updateClock() {
+  document.getElementById('clock').textContent = nowET();
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ── Auto-refresh every 30s ────────────────────────────────────────────────
+renderDashboard();
+setInterval(renderDashboard, 30000);
+
+// ── Listen for cloud sync updates ─────────────────────────────────────────
+window.addEventListener('fom-cloud-updated', renderDashboard);
+window.addEventListener('storage', function(e) {
+  if (e.key && e.key.indexOf('fom_') === 0) renderDashboard();
+});
+</script>
+</body>
+</html>
