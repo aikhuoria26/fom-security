@@ -515,10 +515,10 @@ function render(){
         subCards.push('<div class="oc-sub"><span class="oc-sub-val post">'+pp.post+'</span></div>');
       });
     }
-    if(p.radio)    subCards.push('<div class="oc-sub"><span class="oc-sub-label">R</span><span class="oc-sub-val">'+p.radio+'</span></div>');
-    if(p.key)      subCards.push('<div class="oc-sub"><span class="oc-sub-label">K</span><span class="oc-sub-val">'+p.key+'</span></div>');
-    if(p.recorder) subCards.push('<div class="oc-sub"><span class="oc-sub-label">Rec</span><span class="oc-sub-val">'+p.recorder+'</span></div>');
-    if(p.badge)    subCards.push('<div class="oc-sub"><span class="oc-sub-label">B</span><span class="oc-sub-val">'+p.badge+'</span></div>');
+    if(p.radio)    subCards.push('<div class="oc-sub"><span class="oc-sub-val">Radio: '+p.radio+'</span></div>');
+    if(p.key)      subCards.push('<div class="oc-sub"><span class="oc-sub-val">Key: '+p.key+'</span></div>');
+    if(p.recorder) subCards.push('<div class="oc-sub"><span class="oc-sub-val">Rec: '+p.recorder+'</span></div>');
+    if(p.badge)    subCards.push('<div class="oc-sub"><span class="oc-sub-val">Badge: '+p.badge+'</span></div>');
     rhtml+=
       '<div class="officer-card '+cls+'">'+
         '<div class="oc-name-row">'+
