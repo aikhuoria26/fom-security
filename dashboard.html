@@ -493,8 +493,8 @@ function render(){
 
   // Roster — officer cards with sub-cards
   var RANK_MAP = {
-    'Director of Security':'Director','Assistant Director':'AD','Director':'Director',
-    'Lieutenant':'Lt','Dir/AD/Lt':'Lt','Sergeant':'Sgt','OIC':'OIC','Developer':'Dev','Officer':'Ofc'
+    'Director of Security':'Dir','Assistant Director':'AD','Director':'Dir',
+    'Lieutenant':'Lt','Dir/AD/Lt':'Dir','Sergeant':'Sgt','OIC':'OIC','Developer':'Dev','Officer':'Ofc'
   };
   document.getElementById('roster-sub').textContent='('+active.length+' active)';
   var rhtml='';
@@ -510,11 +510,10 @@ function render(){
     var subCards = [];
     if(isBreak){
       subCards.push('<div class="oc-sub"><span class="oc-sub-val break">On Break</span></div>');
-    } else {
-      posts.forEach(function(pp){
-        subCards.push('<div class="oc-sub"><span class="oc-sub-val post">'+pp.post+'</span></div>');
-      });
     }
+    posts.forEach(function(pp){
+      subCards.push('<div class="oc-sub"><span class="oc-sub-val post">'+pp.post+'</span></div>');
+    });
     if(p.radio)    subCards.push('<div class="oc-sub"><span class="oc-sub-val">Radio: '+p.radio+'</span></div>');
     if(p.key)      subCards.push('<div class="oc-sub"><span class="oc-sub-val">Key: '+p.key+'</span></div>');
     if(p.recorder) subCards.push('<div class="oc-sub"><span class="oc-sub-val">Rec: '+p.recorder+'</span></div>');
