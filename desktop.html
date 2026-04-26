@@ -1362,6 +1362,8 @@ var FOM_REGISTRATION_URL = '/';
   // Convert desktop personnel back to posting format and save to fom_daily_posting
   // This ensures posting.html always reflects desktop changes
   function syncPersonnelToPosting(){
+    // Never overwrite a posting that was manually opened/edited by the user
+    if(window._postingManuallyEdited) return;
     try {
       var personnelRaw = localStorage.getItem('fom_personnel');
       if(!personnelRaw) return;
@@ -2467,7 +2469,8 @@ var FOM_REGISTRATION_URL = '/';
         var pu=typeof FOM_POSTING_URL==='string'?FOM_POSTING_URL.trim():'';
         if(!pu){alert('Daily Posting URL not configured.');return;}
         var existing=document.getElementById('fom-posting-modal-overlay');
-        if(existing){existing.remove();return;}
+        if(existing){existing.remove();window._postingManuallyEdited=false;return;}
+        window._postingManuallyEdited=true;
         var overlay=document.createElement('div');
         overlay.id='fom-posting-modal-overlay';
         overlay.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;z-index:99990;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)';
@@ -2477,7 +2480,7 @@ var FOM_REGISTRATION_URL = '/';
         frame.setAttribute('allowtransparency','true');
         overlay.appendChild(frame);
         document.body.appendChild(overlay);
-        overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.remove();});
+        overlay.addEventListener('click',function(e){if(e.target===overlay){overlay.remove();window._postingManuallyEdited=false;}});
         var _pmListener=function(e){if(e.data&&e.data.action==='closePostingModal'){overlay.remove();window.removeEventListener('message',_pmListener);}};
         window.addEventListener('message',_pmListener);
       }));
@@ -3187,38 +3190,37 @@ var FOM_REGISTRATION_URL = '/';
       return;
     }
     
-    // 2) Check if there's actual personnel data for a different shift
-    var storedShift='';
+    // 2) Only reset on shift change if fom_shift was explicitly set by the user.
+    //    Never reset based on the shift_marker alone — that prevented officers
+    //    from working across shift boundaries (e.g. overlap, late start).
+    var userShift = localStorage.getItem('fom_shift') || '';
+    if(!userShift) return; // user hasn't set a shift yet, nothing to reset
+    
+    // Only auto-reset if the user-selected shift is a full period behind the
+    // current clock shift AND the date hasn't changed (caught above). This
+    // prevents the common case of a supervisor starting setup before the shift
+    // boundary from triggering a wipe.
+    var shiftOrder = {Morning:0, Evening:1, Night:2};
+    if(shiftOrder[userShift] === undefined || shiftOrder[curShift] === undefined) return;
+    
+    // Consider a shift stale only when the clock has moved TWO slots forward,
+    // i.e. a full shift has passed. One slot of difference is normal overlap.
+    var diff = (shiftOrder[curShift] - shiftOrder[userShift] + 3) % 3;
+    if(diff < 2) return; // within normal overlap range — do not reset
+    
+    // Verify there's actual data to clear (not already empty)
+    var hasData=false;
     try{
-      var sum=JSON.parse(localStorage.getItem('fom_security_summary')||'{}');
-      storedShift=sum.shift||'';
+      var pers=localStorage.getItem('fom_personnel');
+      if(pers){
+        var p=JSON.parse(pers);
+        hasData=p.some(function(x){return x.name});
+      }
     }catch(e){}
     
-    // Also check shift marker as backup
-    if(!storedShift){
-      storedShift=localStorage.getItem('fom_shift_marker')||'';
-    }
-    
-    if(!storedShift) return; // no data at all, nothing to reset
-    
-    if(storedShift!==curShift){
-      // Verify there's actual data to clear (not already empty)
-      var hasData=false;
-      try{
-        var pers=localStorage.getItem('fom_personnel');
-        if(pers){
-          var p=JSON.parse(pers);
-          hasData=p.some(function(x){return x.name});
-        }
-      }catch(e){}
-      
-      if(hasData){
-        console.log('[FOM-RESET] Shift changed: '+storedShift+' → '+curShift);
-        doReset(today,curShift);
-      } else {
-        // No data but shift marker is stale — just update marker
-        localStorage.setItem('fom_shift_marker',curShift);
-      }
+    if(hasData){
+      console.log('[FOM-RESET] Shift stale: '+userShift+' → '+curShift);
+      doReset(today,curShift);
     }
   }
   
