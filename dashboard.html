@@ -268,7 +268,7 @@ html, body {
     <div class="info-cell"><div class="info-label">Desk Officer</div><div class="info-val" id="ib-desk">&mdash;</div></div>
     <div class="info-cell"><div class="info-label">Shift Time</div><div class="info-val" id="ib-stime">&mdash;</div></div>
     <div class="info-cell"><div class="info-label">Shift</div><div class="info-val" id="ib-shift">&mdash;</div></div>
-    <div class="info-cell"><div class="info-label">On Duty</div><div class="info-val ok" id="ib-duty">0</div></div>
+    <div class="info-cell"><div class="info-label">On Duty</div><div class="info-val" id="ib-duty">0</div></div>
   </div>
 
   <div id="body">
@@ -340,7 +340,6 @@ html, body {
 <script>
 var SUP_ROLES = ['Dir/AD/Lt','Sergeant','OIC','Lieutenant','Director of Security','Assistant Director','Director','Developer'];
 var PRIMARY_POSTS = ['Mall','Vehicle','Desk','Special'];
-var POST_ICONS = {Mall:'Mall',Vehicle:'Vehicle',Desk:'Desk',Special:'Special'};
 var POST_COLORS = {Mall:'var(--blue)',Vehicle:'var(--amber)',Desk:'var(--green)',Special:'var(--purple)'};
 
 function ls(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
@@ -407,12 +406,9 @@ function taskCard(t){
 function lrow(l,r){
   return'<div class="list-row">'+l+'<span class="lv">'+r+'</span></div>';
 }
-
 function setM(id,val,cls){
-  var el=document.getElementById(id);
-  if(!el)return;
-  el.textContent=val;
-  el.className='stat-val'+(cls?' '+cls:'');
+  var el=document.getElementById(id);if(!el)return;
+  el.textContent=val;el.className='stat-val'+(cls?' '+cls:'');
 }
 
 function render(){
@@ -426,7 +422,6 @@ function render(){
   var offRadios    = ls('fom_officerRadios',[]);
   var otherRadios  = ls('fom_otherRadios',[]);
   var recorders    = ls('fom_recorders',[]);
-  var notes        = ls('fom_notes',[]);
   var tasks        = ls('fom_secondaryTasks',[]);
   var oosState     = ls('fom_oos_state',{});
   var oosIds       = (oosState&&oosState.badges)||[];
@@ -451,45 +446,41 @@ function render(){
   var supNames = active.filter(function(p){return SUP_ROLES.indexOf(p.role)>=0&&p.role!=='OIC';})
     .map(function(p){return sn(p.name);}).join(' / ')||'\u2014';
 
-  // ── Topbar ──
   var dateStr = currentDate?(function(){
     try{return new Date(currentDate+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});}
     catch(e){return currentDate;}
-  }()):'';
-  document.getElementById('tb-shift').innerHTML = 'Shift <b>'+(shift||'\u2014')+(dateStr?' \u00b7 '+dateStr:'')+'</b>';
-  document.getElementById('tb-oic').innerHTML   = 'OIC <b>'+supNames+'</b>';
-  document.getElementById('tb-desk').innerHTML  = 'Desk <b>'+(deskOfficer||'\u2014')+'</b>';
-  document.getElementById('tb-weather').textContent = weather.temp?(weather.temp+(weather.conditions?' \u00b7 '+weather.conditions:'')):'';
+  }()):'';;
+  document.getElementById('tb-shift').innerHTML='Shift <b>'+(shift||'\u2014')+(dateStr?' \u00b7 '+dateStr:'')+'</b>';
+  document.getElementById('tb-oic').innerHTML='OIC <b>'+supNames+'</b>';
+  document.getElementById('tb-desk').innerHTML='Desk <b>'+(deskOfficer||'\u2014')+'</b>';
+  document.getElementById('tb-weather').textContent=weather.temp?(weather.temp+(weather.conditions?' \u00b7 '+weather.conditions:'')):'';;
 
-  // ── Stats ──
-  setM('m-duty',   active.length, active.length>0?'ok':'');
-  setM('m-post',   onPost,  '');
-  setM('m-break',  onBreak, onBreak>0?'warn':'');
-  setM('m-rout',   radiosOut,'');
-  setM('m-kout',   keysOut,  '');
-  setM('m-recout', recsOut,  '');
-  setM('m-boos',   badgesOOS, badgesOOS>0?'alert':'');
-  setM('m-toos',   totalOOS,  totalOOS>0?'alert':active.length>0?'ok':'');
+  setM('m-duty',  active.length, active.length>0?'ok':'');
+  setM('m-post',  onPost,'');
+  setM('m-break', onBreak, onBreak>0?'warn':'');
+  setM('m-rout',  radiosOut,'');
+  setM('m-kout',  keysOut,'');
+  setM('m-recout',recsOut,'');
+  setM('m-boos',  badgesOOS, badgesOOS>0?'alert':'');
+  setM('m-toos',  totalOOS,  totalOOS>0?'alert':active.length>0?'ok':'');
 
-  // ── Info bar ──
-  document.getElementById('ib-sup').textContent   = supNames;
-  document.getElementById('ib-desk').textContent  = deskOfficer||'\u2014';
-  document.getElementById('ib-stime').textContent = shiftTime(shift);
-  document.getElementById('ib-shift').textContent = shift||'\u2014';
-  document.getElementById('ib-duty').textContent  = active.length;
+  document.getElementById('ib-sup').textContent  =supNames;
+  document.getElementById('ib-desk').textContent =deskOfficer||'\u2014';
+  document.getElementById('ib-stime').textContent=shiftTime(shift);
+  document.getElementById('ib-shift').textContent=shift||'\u2014';
+  document.getElementById('ib-duty').textContent =active.length;
 
-  // ── Roster ──
-  document.getElementById('roster-sub').textContent = '('+active.length+' active)';
+  // Roster
+  document.getElementById('roster-sub').textContent='('+active.length+' active)';
   var rhtml='';
   active.forEach(function(p){
-    var isSup   = SUP_ROLES.indexOf(p.role)>=0;
-    var isBreak = p.posts&&p.posts.some(function(x){return x.isBreak;});
-    var posts   = (p.posts||[]).filter(function(x){return x.post&&!x.isBreak;}).map(function(x){return x.post;}).join(', ')||'\u2014';
-    var dotCol  = isBreak?'var(--amber)':isSup?'var(--purple)':'var(--green)';
-    var nameCls = isSup?'r-name r-sup':'r-name';
+    var isSup  =SUP_ROLES.indexOf(p.role)>=0;
+    var isBreak=p.posts&&p.posts.some(function(x){return x.isBreak;});
+    var posts  =(p.posts||[]).filter(function(x){return x.post&&!x.isBreak;}).map(function(x){return x.post;}).join(', ')||'\u2014';
+    var dotCol =isBreak?'var(--amber)':isSup?'var(--purple)':'var(--green)';
     rhtml+='<tr>'+
       '<td><span class="r-dot" style="background:'+dotCol+'"></span></td>'+
-      '<td class="'+nameCls+'">'+sn(p.name)+'</td>'+
+      '<td class="'+(isSup?'r-name r-sup':'r-name')+'">'+sn(p.name)+'</td>'+
       '<td>'+(isBreak?'Break':posts)+'</td>'+
       '<td>'+(p.radio||'\u2014')+'</td>'+
       '<td>'+(p.key||'\u2014')+'</td>'+
@@ -498,111 +489,91 @@ function render(){
     '</tr>';
   });
   document.getElementById('roster-body').innerHTML=rhtml||
-    '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:14px;font-size:10px;">No officers on duty</td></tr>';
+    '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:14px;font-size:11px;">No officers on duty</td></tr>';
 
-  // ── Primary Tasks ──
+  // Primary Tasks
   var byPost={};
   PRIMARY_POSTS.forEach(function(p){byPost[p]=[];});
   active.forEach(function(p){
     (p.posts||[]).forEach(function(pp){
-      if(pp.post&&!pp.isBreak&&byPost[pp.post]!==undefined){
-        if(isActive(pp.from,pp.to)) byPost[pp.post].push(sn(p.name));
-      }
+      if(pp.post&&!pp.isBreak&&byPost[pp.post]!==undefined&&isActive(pp.from,pp.to))
+        byPost[pp.post].push(sn(p.name));
     });
   });
   var activePosts=PRIMARY_POSTS.filter(function(p){return byPost[p].length>0;});
-  var ptHTML=activePosts.length
+  document.getElementById('primary-task-area').innerHTML=activePosts.length
     ?'<div class="task-list">'+activePosts.map(function(pn){
-        var officers=byPost[pn];
         var col=POST_COLORS[pn];
         return'<div class="task-item active" style="border-left-color:'+col+';background:rgba(0,0,0,0.2)">'+
           '<div class="task-name" style="color:var(--text)">'+pn+'</div>'+
-          '<div class="task-who">'+officers.join(', ')+'</div>'+
+          '<div class="task-who">'+byPost[pn].join(', ')+'</div>'+
         '</div>';
       }).join('')+'</div>'
     :'<div class="no-data">No active assignments</div>';
-  document.getElementById('primary-task-area').innerHTML=ptHTML;
 
-  // ── Secondary Tasks ──
+  // Secondary Tasks
   var activeCS={};
   active.forEach(function(p){
-    var cs=normCS(p.callSign);
-    if(!cs)return;
+    var cs=normCS(p.callSign);if(!cs)return;
     (p.posts||[]).forEach(function(pp){
-      if(pp.post&&!pp.isBreak&&PRIMARY_POSTS.indexOf(pp.post)>=0){
-        if(isActive(pp.from,pp.to)) activeCS[cs]=true;
-      }
+      if(pp.post&&!pp.isBreak&&PRIMARY_POSTS.indexOf(pp.post)>=0&&isActive(pp.from,pp.to))
+        activeCS[cs]=true;
     });
   });
   var activeTasks=tasks.filter(function(t){
-    if(!t.callSign||!t.callSign.trim())return false;
-    return activeCS[normCS(t.callSign)]===true;
+    return t.callSign&&t.callSign.trim()&&activeCS[normCS(t.callSign)]===true;
   });
   document.getElementById('sec-task-sub').textContent=activeTasks.length?'('+activeTasks.length+')':'';
   document.getElementById('tasks-list').innerHTML=activeTasks.length
-    ?activeTasks.map(function(t){return taskCard(t);}).join('')
+    ?activeTasks.map(taskCard).join('')
     :'<div class="no-data">No active tasks</div>';
 
-  // Build set of active names for cross-referencing radio assignments
-  var activeNames = {};
-  active.forEach(function(p){ if(p.name) activeNames[p.name.trim().toLowerCase()]=true; });
-  function isOnDuty(assignedTo) {
-    if(!assignedTo) return false;
-    // Check if the assigned person is in the active roster
-    var a = assignedTo.trim().toLowerCase();
-    if(activeNames[a]) return true;
-    // Also check last-name match
-    var parts = a.split(/[,\s]+/);
-    for(var i=0;i<parts.length;i++){
-      for(var k in activeNames){
-        if(k.indexOf(parts[i])>=0&&parts[i].length>2) return true;
-      }
-    }
+  // Active names for radio duty check
+  var activeNames={};
+  active.forEach(function(p){if(p.name)activeNames[p.name.trim().toLowerCase()]=true;});
+  function isOnDuty(a){
+    if(!a)return false;
+    var al=a.trim().toLowerCase();
+    if(activeNames[al])return true;
+    var parts=al.split(/[,\s]+/);
+    for(var i=0;i<parts.length;i++)
+      for(var k in activeNames)
+        if(k.indexOf(parts[i])>=0&&parts[i].length>2)return true;
     return false;
   }
 
-  // Supervisor radios = fom_supervisorRadios + otherRadios 95, 97, 99
-  var SUP_OTHER_IDS = ['95','97','99'];
-  var supOtherRadios = otherRadios.filter(function(r){ return SUP_OTHER_IDS.indexOf(String(r.id))>=0; });
-  var remainingOtherRadios = otherRadios.filter(function(r){ return SUP_OTHER_IDS.indexOf(String(r.id))<0; });
-  var allSupRadios = supRadios.concat(supOtherRadios);
+  var SUP_OTHER_IDS=['95','97','99'];
+  var supOtherRadios=otherRadios.filter(function(r){return SUP_OTHER_IDS.indexOf(String(r.id))>=0;});
+  var remainingOtherRadios=otherRadios.filter(function(r){return SUP_OTHER_IDS.indexOf(String(r.id))<0;});
+  var allSupRadios=supRadios.concat(supOtherRadios);
 
-  function radioCard(r) {
-    var oos = !!r.oos;
-    var assigned = !!r.assignedTo && !r.oos;
-    var onDuty = assigned && isOnDuty(r.assignedTo);
-    var cls = oos ? 'oos' : (assigned && onDuty) ? 'out' : 'avail';
-    var status = oos ? 'OOS' : (assigned && onDuty) ? 'Out' : 'Avail';
-    var who = (assigned && onDuty) ? sn(r.assignedTo) : '';
-    return eqCard(r.id, cls, status, who);
+  function radioCard(r){
+    var oos=!!r.oos,assigned=!!r.assignedTo&&!r.oos,onDuty=assigned&&isOnDuty(r.assignedTo);
+    var cls=oos?'oos':(assigned&&onDuty)?'out':'avail';
+    var status=oos?'OOS':(assigned&&onDuty)?'Out':'Avail';
+    return eqCard(r.id,cls,status,(assigned&&onDuty)?sn(r.assignedTo):'');
   }
 
-  function renderEqGrid(id, cards) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    if (!cards.length) { el.innerHTML = noData(); el.style.gridTemplateColumns = ''; return; }
-    var n = cards.length;
-    // If it would naturally spill to 2 rows, force exactly 2 even rows
-    var cols = n <= 6 ? n : Math.ceil(n / 2);
-    el.style.gridTemplateColumns = 'repeat('+cols+', 1fr)';
-    el.innerHTML = cards.join('');
+  function renderEqGrid(id,cards){
+    var el=document.getElementById(id);if(!el)return;
+    if(!cards.length){el.innerHTML=noData();el.style.gridTemplateColumns='';return;}
+    var n=cards.length,cols=n<=6?n:Math.ceil(n/2);
+    el.style.gridTemplateColumns='repeat('+cols+',1fr)';
+    el.innerHTML=cards.join('');
   }
 
-  // ── Sup Radios ──
   var supOut=allSupRadios.filter(function(r){return r.assignedTo&&!r.oos&&isOnDuty(r.assignedTo);}).length;
   var supAvail=allSupRadios.filter(function(r){return(!r.assignedTo||!isOnDuty(r.assignedTo))&&!r.oos;}).length;
   var supOOS=allSupRadios.filter(function(r){return r.oos;}).length;
   document.getElementById('sup-radio-sub').textContent=supOut+' out \u00b7 '+supAvail+' avail \u00b7 '+supOOS+' OOS';
-  renderEqGrid('sup-radio-grid', allSupRadios.map(radioCard));
+  renderEqGrid('sup-radio-grid',allSupRadios.map(radioCard));
 
-  // ── Officer Radios ──
   var offOut=offRadios.filter(function(r){return r.assignedTo&&!r.oos&&isOnDuty(r.assignedTo);}).length;
   var offAvail=offRadios.filter(function(r){return(!r.assignedTo||!isOnDuty(r.assignedTo))&&!r.oos;}).length;
   var offOOS=offRadios.filter(function(r){return r.oos;}).length;
   document.getElementById('off-radio-sub').textContent=offOut+' out \u00b7 '+offAvail+' avail \u00b7 '+offOOS+' OOS';
-  renderEqGrid('off-radio-grid', offRadios.map(radioCard));
+  renderEqGrid('off-radio-grid',offRadios.map(radioCard));
 
-  // ── Keys ──
   document.getElementById('key-sub').textContent=keysOut+' out \u00b7 '+keysAvail+' avail \u00b7 '+keysOOS+' OOS';
   var khtml='';
   secKeys.filter(function(k){return k.assignedTo&&!k.oos;}).forEach(function(k){
@@ -613,28 +584,24 @@ function render(){
   });
   document.getElementById('key-list').innerHTML=khtml||noData('None assigned');
 
-  // ── Recorders ──
   document.getElementById('rec-sub').textContent=recsOut+' out \u00b7 '+recsOOS+' OOS';
-  renderEqGrid('rec-grid', recorders.map(function(r){
+  renderEqGrid('rec-grid',recorders.map(function(r){
     var oos=!!r.oos,out=!!r.assignedTo&&!r.oos;
     return eqCard('#'+r.id,oos?'oos':out?'out':'avail',oos?'OOS':out?'Out':'Avail',out?sn(r.assignedTo):'');
   }));
 
-  // ── Other Radios (95/97/99 moved to supervisor) ──
   var otherOut=remainingOtherRadios.filter(function(r){return r.assignedTo&&!r.oos&&isOnDuty(r.assignedTo);}).length;
   document.getElementById('other-radio-sub').textContent=otherOut+' assigned';
-  renderEqGrid('other-radio-grid', remainingOtherRadios.map(radioCard));
+  renderEqGrid('other-radio-grid',remainingOtherRadios.map(radioCard));
 
-  // ── Access & Other ──
-  var okeys  = otherKeys.filter(function(k){return!k.available&&k.assignedTo;}).length;
-  var obadge = accessBadges.filter(function(a){return!a.available&&!a.oos;}).length;
-  var osat   = satPhones.filter(function(s){return!s.available&&!s.oos;}).length;
+  var okeys =otherKeys.filter(function(k){return!k.available&&k.assignedTo;}).length;
+  var obadge=accessBadges.filter(function(a){return!a.available&&!a.oos;}).length;
+  var osat  =satPhones.filter(function(s){return!s.available&&!s.oos;}).length;
   document.getElementById('other-items-list').innerHTML=
-    lrow(ldot('var(--blue)')+'<span class="lf">Other keys out</span>',  okeys)+
+    lrow(ldot('var(--blue)')+'<span class="lf">Other keys out</span>',okeys)+
     lrow(ldot('var(--blue)')+'<span class="lf">Access badges out</span>',obadge)+
-    lrow(ldot('var(--blue)')+'<span class="lf">Sat phones out</span>',  osat);
+    lrow(ldot('var(--blue)')+'<span class="lf">Sat phones out</span>',osat);
 
-  // ── OOS bar ──
   var oosBar=document.getElementById('oos-bar');
   if(totalOOS>0){
     oosBar.style.display='flex';
@@ -645,18 +612,15 @@ function render(){
     recorders.filter(function(r){return r.oos;}).forEach(function(r){chips.push(chip('Rec '+r.id,'#c0392b','rgba(192,57,43,0.15)'));});
     oosIds.forEach(function(id){chips.push(chip('Badge '+id,'#c0392b','rgba(192,57,43,0.15)'));});
     document.getElementById('oos-chips').innerHTML=chips.join('');
-  } else {
+  }else{
     oosBar.style.display='none';
   }
 
   document.getElementById('last-updated').textContent='Updated '+new Date().toLocaleTimeString();
 }
 
-// Clock
 setInterval(function(){document.getElementById('tb-clock').textContent=nowET();},1000);
 document.getElementById('tb-clock').textContent=nowET();
-
-// Run
 render();
 setInterval(render,30000);
 window.addEventListener('fom-cloud-updated',render);
