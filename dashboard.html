@@ -5,579 +5,619 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FOM Command Dashboard</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #0b1120; --card: #111827; --border: rgba(255,255,255,0.09);
-    --text: #e2e8f0; --muted: #64748b; --subtle: #94a3b8; --accent: #c9a84c;
-    --green: #4ade80; --blue: #60a5fa; --purple: #a78bfa; --amber: #fbbf24;
-    --pink: #f472b6; --red: #f87171; --teal: #2dd4bf;
-  }
-  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:     #060d18;
+  --panel:  #0a1420;
+  --card:   #0d1a28;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.10);
+  --text:   #e2e8f0;
+  --muted:  #1e3352;
+  --subtle: #4a6080;
+  --dim:    #334155;
+  --accent: #b8862a;
+  --green:  #2ecc71;
+  --amber:  #e67e22;
+  --red:    #c0392b;
+  --blue:   #3b82f6;
+  --purple: #9b59b6;
+}
+html, body {
+  height: 100%; background: var(--bg); color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif; font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
 
-  /* ── Header ── */
-  #header {
-    position: sticky; top: 0; z-index: 100;
-    background: linear-gradient(135deg, #0a1830 0%, #1e3a5f 60%, rgba(201,168,76,0.08) 100%);
-    border-bottom: 1px solid var(--border);
-    padding: 0 20px; display: flex; align-items: center; justify-content: space-between; height: 56px;
-  }
-  #header h1 { font-size: 16px; font-weight: 800; color: #fff; }
-  #header .sub { font-size: 11px; color: var(--subtle); }
-  #header .right { display: flex; align-items: center; gap: 16px; }
-  #clock { font-size: 20px; font-weight: 800; color: var(--accent); }
-  #weather-display { font-size: 11px; color: var(--subtle); }
-  #back-btn {
-    background: rgba(255,255,255,0.08); border: 1px solid var(--border);
-    color: var(--text); padding: 6px 14px; border-radius: 6px;
-    cursor: pointer; font-size: 12px; font-weight: 600; text-decoration: none;
-    display: inline-flex; align-items: center; gap: 6px;
-  }
-  #back-btn:hover { background: rgba(255,255,255,0.14); }
-  #refresh-btn {
-    background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.3);
-    color: var(--accent); padding: 6px 14px; border-radius: 6px;
-    cursor: pointer; font-size: 12px; font-weight: 600;
-  }
-  #refresh-btn:hover { background: rgba(201,168,76,0.22); }
+/* ── TOPBAR ── */
+#topbar {
+  height: 38px; background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 16px; gap: 16px;
+  flex-shrink: 0; position: sticky; top: 0; z-index: 50;
+}
+#topbar .logo {
+  font-size: 11px; font-weight: 600; color: var(--text);
+  letter-spacing: .12em; text-transform: uppercase;
+}
+#topbar .logo span { color: var(--accent); }
+.tb-div { width: 1px; height: 14px; background: var(--border2); }
+.tb-item { font-size: 10px; color: var(--subtle); white-space: nowrap; }
+.tb-item b { color: #94a3b8; font-weight: 500; }
+#tb-clock { margin-left: auto; font-size: 14px; font-weight: 500; color: var(--accent); letter-spacing: .06em; }
+#tb-back {
+  font-size: 10px; font-weight: 500; color: var(--subtle);
+  text-decoration: none; padding: 3px 10px;
+  border: 1px solid var(--border2); border-radius: 4px;
+  transition: color .15s, border-color .15s;
+}
+#tb-back:hover { color: var(--text); border-color: var(--border2); }
+#tb-refresh {
+  font-size: 10px; font-weight: 500; color: var(--accent);
+  background: none; border: 1px solid rgba(184,134,42,0.25);
+  border-radius: 4px; padding: 3px 10px; cursor: pointer;
+}
+#tb-refresh:hover { background: rgba(184,134,42,0.08); }
 
-  /* ── Main layout ── */
-  #main { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+/* ── MAIN ── */
+#main { display: flex; flex-direction: column; gap: 0; }
 
-  /* ── Info bar ── */
-  #info-bar {
-    background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 8px;
-    padding: 10px 18px; display: grid; grid-template-columns: repeat(5,1fr); gap: 12px;
-  }
-  .info-item .label { font-size: 9px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
-  .info-item .value { font-size: 13px; font-weight: 700; color: var(--text); margin-top: 3px; }
+/* ── STAT ROW ── */
+#stat-row {
+  display: grid; grid-template-columns: repeat(8,1fr);
+  border-bottom: 1px solid var(--border);
+}
+.stat-cell {
+  padding: 8px 12px; border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.stat-cell:last-child { border-right: none; }
+.stat-label {
+  font-size: 8px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .1em;
+}
+.stat-val {
+  font-size: 20px; font-weight: 500; color: var(--text);
+  line-height: 1;
+}
+.stat-val.alert  { color: var(--red); }
+.stat-val.warn   { color: var(--amber); }
+.stat-val.ok     { color: var(--green); }
 
-  /* ── Metrics ── */
-  #metrics { display: grid; grid-template-columns: repeat(8,1fr); gap: 8px; }
-  .metric {
-    background: var(--card); border: 1px solid var(--border); border-top: 3px solid transparent;
-    border-radius: 8px; padding: 10px 6px; text-align: center;
-  }
-  .metric .val { font-size: 26px; font-weight: 700; line-height: 1; }
-  .metric .lbl { font-size: 9px; color: var(--muted); font-weight: 700; margin-top: 4px; text-transform: uppercase; letter-spacing: .06em; }
+/* ── INFO BAR ── */
+#info-bar {
+  display: grid; grid-template-columns: repeat(5,1fr);
+  border-bottom: 1px solid var(--border);
+}
+.info-cell {
+  padding: 6px 12px; border-right: 1px solid var(--border);
+}
+.info-cell:last-child { border-right: none; }
+.info-label {
+  font-size: 8px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .1em;
+}
+.info-val { font-size: 11px; font-weight: 500; color: #94a3b8; margin-top: 2px; }
 
-  /* ── Grid row helpers ── */
-  .row-3   { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-  .row-3-w { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 10px; }
-  .row-2   { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .col     { display: flex; flex-direction: column; gap: 10px; }
+/* ── BODY ── */
+#body { display: flex; flex-direction: column; }
 
-  /* ── Card ── */
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
-  .card-title { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; }
-  .card-sub { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 6px; }
+/* ── ROW ── */
+.dash-row {
+  display: grid; border-bottom: 1px solid var(--border);
+}
+.r-3   { grid-template-columns: 1.5fr 1fr 1fr; }
+.r-3b  { grid-template-columns: 1fr 1fr 1fr; }
+.r-2   { grid-template-columns: 1fr 1fr; }
 
-  /* ── Roster table ── */
-  #roster-table { width: 100%; border-collapse: collapse; }
-  #roster-table th {
-    text-align: left; padding: 3px 6px; font-size: 9px; font-weight: 700;
-    color: var(--muted); text-transform: uppercase; letter-spacing: .06em;
-    border-bottom: 1px solid var(--border);
-  }
-  #roster-table td { padding: 5px 6px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-  #roster-table tr:last-child td { border-bottom: none; }
-  .name-cell { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-  .sup-tag { font-size: 9px; background: rgba(201,168,76,0.2); color: var(--accent); border-radius: 3px; padding: 1px 4px; font-weight: 700; }
+/* ── CARD ── */
+.d-card {
+  padding: 10px 12px;
+  border-right: 1px solid var(--border);
+}
+.d-card:last-child { border-right: none; }
+.d-card-title {
+  font-size: 8px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .1em;
+  padding-bottom: 7px; margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.d-card-sub { font-size: 9px; font-weight: 400; color: var(--dim); text-transform: none; letter-spacing: 0; }
 
-  /* ── Equipment card grid — FIXED width, wraps + scrolls ── */
-  .eq-grid {
-    display: flex; flex-wrap: wrap; gap: 7px;
-    overflow-y: auto; max-height: 280px;
-  }
-  .eq-card {
-    width: 88px; flex-shrink: 0;
-    border: 2px solid #1e293b; border-radius: 8px; padding: 8px 4px;
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
-    text-align: center; background: #151e2d;
-  }
-  .eq-card .eq-id  { font-size: 12px; font-weight: 800; color: var(--text); }
-  .eq-card .eq-st  { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
-  .eq-card .eq-who { font-size: 9px; color: var(--subtle); width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .eq-card.avail { border-color: #166534; background: rgba(22,101,52,0.18); }
-  .eq-card.avail .eq-st { color: var(--green); }
-  .eq-card.out   { border-color: #78350f; background: rgba(120,53,15,0.22); }
-  .eq-card.out   .eq-st { color: var(--amber); }
-  .eq-card.oos   { border-color: #7f1d1d; background: rgba(127,29,29,0.18); opacity: 0.65; }
-  .eq-card.oos   .eq-st { color: var(--red); }
-  .eq-card.perm  { border-color: #1e3a5f; background: rgba(30,58,95,0.3); }
-  .eq-card.perm  .eq-st { color: var(--blue); }
+/* ── ROSTER TABLE ── */
+#roster-table { width: 100%; border-collapse: collapse; }
+#roster-table th {
+  text-align: left; padding: 2px 5px 5px; font-size: 8px;
+  font-weight: 600; color: var(--muted); text-transform: uppercase;
+  letter-spacing: .08em;
+}
+#roster-table td {
+  padding: 4px 5px; border-top: 1px solid var(--border);
+  font-size: 10px; color: var(--dim);
+}
+#roster-table td.r-name { color: #94a3b8; font-weight: 500; }
+#roster-table td.r-sup  { color: #9b59b6; font-weight: 500; }
+.r-dot {
+  display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%; margin-right: 4px; vertical-align: middle;
+}
 
-  /* ── Task cards ── */
-  .task-grid { display: flex; flex-direction: column; gap: 7px; overflow-y: auto; max-height: 340px; }
-  .task-card {
-    background: #141e32; border: 1px solid rgba(255,255,255,0.08);
-    border-left: 3px solid var(--accent); border-radius: 8px; padding: 9px 11px;
-    display: flex; flex-direction: column; gap: 3px;
-  }
-  .task-card.active-primary {
-    border-left-color: var(--green);
-    background: rgba(22,101,52,0.12);
-  }
-  .task-card .t-name  { font-size: 12px; font-weight: 700; color: var(--text); }
-  .task-card .t-detail { font-size: 11px; color: var(--subtle); line-height: 1.4; }
-  .task-card .t-sign  { font-size: 11px; color: var(--accent); font-weight: 600; }
-  .task-card .t-badge {
-    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
-    padding: 2px 6px; border-radius: 3px; width: fit-content;
-  }
-  .task-card .t-badge.active { background: rgba(74,222,128,0.15); color: var(--green); }
-  .task-card .t-badge.pending { background: rgba(251,191,36,0.15); color: var(--amber); }
+/* ── TASK CARDS ── */
+.task-list { display: flex; flex-direction: column; gap: 4px; }
+.task-item {
+  border-left: 2px solid var(--muted);
+  padding: 5px 8px;
+  background: rgba(255,255,255,0.015);
+  border-radius: 0 3px 3px 0;
+}
+.task-item.active { border-left-color: var(--green); }
+.task-name  { font-size: 11px; font-weight: 500; color: #94a3b8; }
+.task-who   { font-size: 9px;  color: var(--dim); margin-top: 1px; }
 
-  /* ── Primary task featured card ── */
-  #primary-task-card {
-    background: rgba(22,101,52,0.10); border: 1px solid rgba(74,222,128,0.2);
-    border-left: 4px solid var(--green); border-radius: 10px; padding: 14px 16px;
-    margin-bottom: 10px;
-  }
-  #primary-task-card .pt-label { font-size: 9px; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
-  #primary-task-card .pt-name  { font-size: 15px; font-weight: 800; color: var(--text); }
-  #primary-task-card .pt-detail { font-size: 12px; color: var(--subtle); margin-top: 4px; line-height: 1.5; }
-  #primary-task-card .pt-sign  { font-size: 12px; color: var(--accent); font-weight: 600; margin-top: 4px; }
+/* ── EQUIPMENT GRID ── */
+.eq-grid {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  overflow-y: auto; max-height: 200px;
+}
+.eq-card {
+  width: 56px; flex-shrink: 0;
+  border: 1px solid var(--border2); border-radius: 4px;
+  padding: 5px 3px; text-align: center; background: var(--panel);
+}
+.eq-card .eq-id { font-size: 10px; font-weight: 500; color: #94a3b8; }
+.eq-card .eq-st { font-size: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+.eq-card .eq-who { font-size: 8px; color: var(--dim); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eq-card.avail { border-color: #1a4731; background: rgba(26,71,49,0.25); }
+.eq-card.avail .eq-st { color: var(--green); }
+.eq-card.out   { border-color: #4a2e08; background: rgba(74,46,8,0.25); }
+.eq-card.out   .eq-st { color: var(--amber); }
+.eq-card.oos   { border-color: #4a0d0d; background: rgba(74,13,13,0.2); opacity: .55; }
+.eq-card.oos   .eq-st { color: var(--red); }
 
-  /* ── List rows ── */
-  .list-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 12px; }
-  .list-row:last-child { border-bottom: none; }
-  .list-row .flex1 { flex: 1; }
-  .list-row .rv { color: var(--subtle); font-size: 11px; }
-  .dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
-  .chip { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; white-space: nowrap; }
-  .no-data { color: var(--muted); font-size: 12px; padding: 8px 0; }
+/* ── LIST ROWS ── */
+.list-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 0; border-bottom: 1px solid var(--border);
+  font-size: 10px;
+}
+.list-row:last-child { border-bottom: none; }
+.list-row .lf { flex: 1; color: var(--dim); }
+.list-row .lv { color: #94a3b8; font-weight: 500; }
+.ldot {
+  width: 6px; height: 6px; border-radius: 50%;
+  display: inline-block; flex-shrink: 0;
+}
+.chip {
+  font-size: 9px; font-weight: 600; padding: 1px 6px;
+  border-radius: 3px; white-space: nowrap;
+}
+.no-data { font-size: 10px; color: var(--dim); padding: 6px 0; }
 
-  /* ── OOS bar ── */
-  #oos-bar {
-    background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.3);
-    border-left: 4px solid var(--red); border-radius: 10px; padding: 10px 14px;
-  }
-  .oos-title { font-size: 10px; font-weight: 700; color: var(--red); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
-  #oos-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  #last-updated { text-align: center; font-size: 10px; color: var(--muted); padding: 4px 0 8px; }
+/* ── OOS BAR ── */
+#oos-bar {
+  display: none;
+  background: rgba(192,57,43,0.05);
+  border-top: 1px solid rgba(192,57,43,0.18);
+  padding: 7px 14px; align-items: center; gap: 10px;
+}
+.oos-label {
+  font-size: 8px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--red); white-space: nowrap;
+}
+#oos-chips { display: flex; flex-wrap: wrap; gap: 5px; }
 
-  @media (max-width: 1000px) {
-    #metrics { grid-template-columns: repeat(4,1fr); }
-    .row-3, .row-3-w, .row-2 { grid-template-columns: 1fr; }
-    #info-bar { grid-template-columns: repeat(2,1fr); }
-  }
+/* ── LAST UPDATED ── */
+#last-updated {
+  text-align: center; font-size: 9px; color: var(--muted);
+  padding: 5px; border-top: 1px solid var(--border);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
 </style>
 </head>
 <body>
 
-<div id="header">
-  <div>
-    <h1>&#x26A1; FOM Command Dashboard</h1>
-    <div class="sub" id="date-sub">Loading&hellip;</div>
-  </div>
-  <div class="right">
-    <div>
-      <div id="clock">--:--</div>
-      <div id="weather-display"></div>
-    </div>
-    <button id="refresh-btn" onclick="render()">&#x21BA; Refresh</button>
-    <a href="desktop.html" id="back-btn">&#x2190; Back to FOM</a>
-  </div>
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="logo">FOM <span>/</span> Command</div>
+  <div class="tb-div"></div>
+  <div class="tb-item" id="tb-shift">Shift <b>&mdash;</b></div>
+  <div class="tb-div"></div>
+  <div class="tb-item" id="tb-oic">OIC <b>&mdash;</b></div>
+  <div class="tb-div"></div>
+  <div class="tb-item" id="tb-desk">Desk <b>&mdash;</b></div>
+  <div class="tb-div"></div>
+  <div class="tb-item" id="tb-weather"></div>
+  <button id="tb-refresh" onclick="render()">&#x21BA; Refresh</button>
+  <a href="desktop.html" id="tb-back">&#x2190; Back to FOM</a>
+  <div id="tb-clock">--:--</div>
 </div>
 
 <div id="main">
 
-  <!-- Info bar -->
+  <!-- STAT ROW -->
+  <div id="stat-row">
+    <div class="stat-cell"><div class="stat-label">On Duty</div><div class="stat-val ok" id="m-duty">0</div></div>
+    <div class="stat-cell"><div class="stat-label">On Post</div><div class="stat-val" id="m-post">0</div></div>
+    <div class="stat-cell"><div class="stat-label">On Break</div><div class="stat-val" id="m-break">0</div></div>
+    <div class="stat-cell"><div class="stat-label">Radios Out</div><div class="stat-val" id="m-rout">0</div></div>
+    <div class="stat-cell"><div class="stat-label">Keys Out</div><div class="stat-val" id="m-kout">0</div></div>
+    <div class="stat-cell"><div class="stat-label">Recorders</div><div class="stat-val" id="m-recout">0</div></div>
+    <div class="stat-cell"><div class="stat-label">Badges OOS</div><div class="stat-val" id="m-boos">0</div></div>
+    <div class="stat-cell"><div class="stat-label">Total OOS</div><div class="stat-val" id="m-toos">0</div></div>
+  </div>
+
+  <!-- INFO BAR -->
   <div id="info-bar">
-    <div class="info-item"><div class="label">Supervisor</div><div class="value" id="ib-sup">&mdash;</div></div>
-    <div class="info-item"><div class="label">Desk Officer</div><div class="value" id="ib-desk">&mdash;</div></div>
-    <div class="info-item"><div class="label">Shift Time</div><div class="value" id="ib-stime">&mdash;</div></div>
-    <div class="info-item"><div class="label">Shift</div><div class="value" id="ib-shift">&mdash;</div></div>
-    <div class="info-item"><div class="label">On Duty</div><div class="value" style="color:var(--green)" id="ib-duty">0</div></div>
+    <div class="info-cell"><div class="info-label">Supervisor</div><div class="info-val" id="ib-sup">&mdash;</div></div>
+    <div class="info-cell"><div class="info-label">Desk Officer</div><div class="info-val" id="ib-desk">&mdash;</div></div>
+    <div class="info-cell"><div class="info-label">Shift Time</div><div class="info-val" id="ib-stime">&mdash;</div></div>
+    <div class="info-cell"><div class="info-label">Shift</div><div class="info-val" id="ib-shift">&mdash;</div></div>
+    <div class="info-cell"><div class="info-label">On Duty</div><div class="info-val ok" id="ib-duty">0</div></div>
   </div>
 
-  <!-- Metrics -->
-  <div id="metrics">
-    <div class="metric" id="m-duty">  <div class="val" style="color:var(--green)">0</div><div class="lbl">On Duty</div></div>
-    <div class="metric" id="m-post">  <div class="val" style="color:var(--blue)">0</div><div class="lbl">On Post</div></div>
-    <div class="metric" id="m-break"> <div class="val" style="color:var(--amber)">0</div><div class="lbl">On Break</div></div>
-    <div class="metric" id="m-rout">  <div class="val" style="color:var(--purple)">0</div><div class="lbl">Radios Out</div></div>
-    <div class="metric" id="m-kout">  <div class="val" style="color:var(--amber)">0</div><div class="lbl">Keys Out</div></div>
-    <div class="metric" id="m-recout"><div class="val" style="color:var(--pink)">0</div><div class="lbl">Recorders</div></div>
-    <div class="metric" id="m-boos">  <div class="val" style="color:var(--red)">0</div><div class="lbl">Badges OOS</div></div>
-    <div class="metric" id="m-toos">  <div class="val" style="color:var(--green)">0</div><div class="lbl">Total OOS</div></div>
+  <div id="body">
+
+    <!-- ROW 1: Roster | Primary Tasks | Secondary Tasks -->
+    <div class="dash-row r-3">
+      <div class="d-card">
+        <div class="d-card-title">Officer Roster <span class="d-card-sub" id="roster-sub"></span></div>
+        <table id="roster-table">
+          <thead><tr>
+            <th></th><th>Officer</th><th>Post</th><th>Radio</th><th>Key</th><th>Rec</th><th>Badge</th>
+          </tr></thead>
+          <tbody id="roster-body"></tbody>
+        </table>
+      </div>
+      <div class="d-card">
+        <div class="d-card-title">Primary Tasks</div>
+        <div id="primary-task-area"></div>
+      </div>
+      <div class="d-card">
+        <div class="d-card-title">Secondary Tasks <span class="d-card-sub" id="sec-task-sub"></span></div>
+        <div class="task-list" id="tasks-list"></div>
+      </div>
+    </div>
+
+    <!-- ROW 2: Sup Radios | Officer Radios | Keys -->
+    <div class="dash-row r-3b">
+      <div class="d-card">
+        <div class="d-card-title">Supervisor Radios <span class="d-card-sub" id="sup-radio-sub"></span></div>
+        <div class="eq-grid" id="sup-radio-grid"></div>
+      </div>
+      <div class="d-card">
+        <div class="d-card-title">Officer Radios <span class="d-card-sub" id="off-radio-sub"></span></div>
+        <div class="eq-grid" id="off-radio-grid"></div>
+      </div>
+      <div class="d-card">
+        <div class="d-card-title">Security Keys <span class="d-card-sub" id="key-sub"></span></div>
+        <div id="key-list"></div>
+      </div>
+    </div>
+
+    <!-- ROW 3: Recorders | Other Radios | Access -->
+    <div class="dash-row r-3b">
+      <div class="d-card">
+        <div class="d-card-title">Recorders <span class="d-card-sub" id="rec-sub"></span></div>
+        <div class="eq-grid" id="rec-grid"></div>
+      </div>
+      <div class="d-card">
+        <div class="d-card-title">Management &amp; Other Radios <span class="d-card-sub" id="other-radio-sub"></span></div>
+        <div class="eq-grid" id="other-radio-grid"></div>
+      </div>
+      <div class="d-card">
+        <div class="d-card-title">Access &amp; Other Items</div>
+        <div id="other-items-list"></div>
+      </div>
+    </div>
+
+    <!-- OOS BAR -->
+    <div id="oos-bar">
+      <span class="oos-label" id="oos-title">&#x26A0; Out of Service</span>
+      <div id="oos-chips"></div>
+    </div>
+
+    <div id="last-updated"></div>
+
   </div>
-
-  <!-- ROW 1: Roster | Primary Tasks | Secondary Tasks -->
-  <div class="row-3-w">
-
-    <!-- Officer Roster -->
-    <div class="card">
-      <div class="card-title">Officer Roster <span class="card-sub" id="roster-sub"></span></div>
-      <table id="roster-table">
-        <thead><tr>
-          <th>Officer</th><th>Post</th><th>Radio</th><th>Key</th><th>Rec</th><th>Badge</th>
-        </tr></thead>
-        <tbody id="roster-body"></tbody>
-      </table>
-    </div>
-
-    <!-- Primary Tasks -->
-    <div class="card">
-      <div class="card-title">&#x25CF; Primary Tasks</div>
-      <div id="primary-task-area"></div>
-    </div>
-
-    <!-- Secondary Tasks -->
-    <div class="card">
-      <div class="card-title">Secondary Tasks <span class="card-sub" id="sec-task-sub"></span></div>
-      <div class="task-grid" id="tasks-list"></div>
-    </div>
-
-  </div>
-
-  <!-- ROW 2: Sup Radios | Officer Radios | Security Keys -->
-  <div class="row-3">
-    <div class="card">
-      <div class="card-title">Supervisor Radios <span class="card-sub" id="sup-radio-sub"></span></div>
-      <div class="eq-grid" id="sup-radio-grid"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Officer Radios <span class="card-sub" id="off-radio-sub"></span></div>
-      <div class="eq-grid" id="off-radio-grid"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Security Keys <span class="card-sub" id="key-sub"></span></div>
-      <div id="key-list"></div>
-    </div>
-  </div>
-
-  <!-- ROW 3: Recorders | Other Radios | Access & Other Items -->
-  <div class="row-3">
-    <div class="card">
-      <div class="card-title">Recorders <span class="card-sub" id="rec-sub"></span></div>
-      <div class="eq-grid" id="rec-grid"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Management &amp; Other Radios <span class="card-sub" id="other-radio-sub"></span></div>
-      <div class="eq-grid" id="other-radio-grid"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Access &amp; Other Items</div>
-      <div id="other-items-list"></div>
-    </div>
-  </div>
-
-  <!-- OOS bar -->
-  <div id="oos-bar" style="display:none">
-    <div class="oos-title" id="oos-title">&#x26A0; Out of Service</div>
-    <div id="oos-chips"></div>
-  </div>
-
-  <div id="last-updated"></div>
 </div>
 
 <script>
 var SUP_ROLES = ['Dir/AD/Lt','Sergeant','OIC','Lieutenant','Director of Security','Assistant Director','Director','Developer'];
+var PRIMARY_POSTS = ['Mall','Vehicle','Desk','Special'];
+var POST_ICONS = {Mall:'Mall',Vehicle:'Vehicle',Desk:'Desk',Special:'Special'};
+var POST_COLORS = {Mall:'var(--blue)',Vehicle:'var(--amber)',Desk:'var(--green)',Special:'var(--purple)'};
 
-function ls(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e) { return d; } }
-function raw(k) { return localStorage.getItem(k) || ''; }
+function ls(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function raw(k){return localStorage.getItem(k)||'';}
 
-function sn(n) {
-  if (!n) return '\u2014';
-  n = n.replace(/^(Dir\.|AD\.|Lt\.|Sgt\.|Ofc\.)\s*/i,'').replace(/\s*\([^)]*\)\s*/g,' ').trim();
-  if (n.indexOf(',') >= 0) return n.split(',')[0].trim();
-  var p = n.split(/\s+/); return p.length > 1 ? p[p.length-1] : p[0];
+function sn(n){
+  if(!n)return'\u2014';
+  n=n.replace(/^(Dir\.|AD\.|Lt\.|Sgt\.|Ofc\.)\s*/i,'').replace(/\s*\([^)]*\)\s*/g,' ').trim();
+  if(n.indexOf(',')>=0)return n.split(',')[0].trim();
+  var p=n.split(/\s+/);return p.length>1?p[p.length-1]:p[0];
 }
-function nowET() {
-  try { return new Date().toLocaleString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',hour12:false}); }
-  catch(e) { return new Date().toTimeString().slice(0,5); }
+function nowET(){
+  try{return new Date().toLocaleString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',hour12:false});}
+  catch(e){return new Date().toTimeString().slice(0,5);}
 }
-function shiftTime(s) {
+function shiftTime(s){
   return s==='Morning'?'07:00\u201315:00':s==='Evening'?'15:00\u201323:00':s==='Night'?'23:00\u201307:00':s||'\u2014';
 }
-function nowMins() {
-  try {
-    var s = new Date().toLocaleString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',hour12:false});
-    var p = s.split(':'); return parseInt(p[0])*60 + parseInt(p[1]);
-  } catch(e) { var d=new Date(); return d.getHours()*60+d.getMinutes(); }
+function nowMins(){
+  try{var s=new Date().toLocaleString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',hour12:false});var p=s.split(':');return parseInt(p[0])*60+parseInt(p[1]);}
+  catch(e){var d=new Date();return d.getHours()*60+d.getMinutes();}
 }
-function parseMins(t) {
-  if (!t) return null;
-  t = t.trim();
-  if (/^\d{4}$/.test(t)) return parseInt(t.slice(0,2))*60 + parseInt(t.slice(2));
-  if (/^\d{1,2}:\d{2}$/.test(t)) { var p=t.split(':'); return parseInt(p[0])*60+parseInt(p[1]); }
+function parseMins(t){
+  if(!t)return null;t=t.trim();
+  if(/^\d{4}$/.test(t))return parseInt(t.slice(0,2))*60+parseInt(t.slice(2));
+  if(/^\d{1,2}:\d{2}$/.test(t)){var p=t.split(':');return parseInt(p[0])*60+parseInt(p[1]);}
   return null;
 }
-function isActive(from, to) {
-  if (!from && !to) return true; // no time set — always show
-  var now=nowMins(), f=parseMins(from), t=parseMins(to);
-  if (f===null || t===null) return true;
-  if (t <= f) t += 1440; // overnight wrap
-  var n = now < f ? now + 1440 : now; // adjust for overnight
-  return n >= f && n < t;
+function isActive(from,to){
+  if(!from&&!to)return true;
+  var now=nowMins(),f=parseMins(from),t=parseMins(to);
+  if(f===null||t===null)return true;
+  if(t<=f)t+=1440;
+  var n=now<f?now+1440:now;
+  return n>=f&&n<t;
 }
-function parseTimeRange(str) {
-  // handles "1500-1700", "15:00-17:00", "15:00 - 17:00"
-  if (!str) return {from:null, to:null};
-  var m = str.replace(/[\u2013\u2014]/g,'-').split('-');
-  if (m.length >= 2) return {from: m[0].trim(), to: m[m.length-1].trim()};
-  return {from:null, to:null};
+function normCS(cs){
+  if(!cs)return'';
+  return cs.trim().toUpperCase().replace(/-(0+)(\d)/,'-$2');
 }
-function dot(c)       { return '<span class="dot" style="background:'+c+'"></span>'; }
-function chip(t,c,b)  { return '<span class="chip" style="color:'+c+';background:'+b+'">'+t+'</span>'; }
-function lrow(l,r)    { return '<div class="list-row">'+l+'<span class="rv">'+r+'</span></div>'; }
-function noData(m)    { return '<div class="no-data">'+(m||'None')+'</div>'; }
+function stripTime(detail){
+  if(!detail)return'';
+  return detail.replace(/\s*@\s*\d{1,2}:?\d{2}\s*$/,'').trim();
+}
+function ldot(c){return'<span class="ldot" style="background:'+c+'"></span>';}
+function chip(t,c,b){return'<span class="chip" style="color:'+c+';background:'+b+'">'+t+'</span>';}
+function noData(m){return'<div class="no-data">'+(m||'None')+'</div>';}
 
-function eqCard(label, cls, status, who) {
-  return '<div class="eq-card '+cls+'">'+
+function eqCard(label,cls,status,who){
+  return'<div class="eq-card '+cls+'">'+
     '<div class="eq-id">'+label+'</div>'+
     '<div class="eq-st">'+status+'</div>'+
-    (who ? '<div class="eq-who">'+who+'</div>' : '')+
+    (who?'<div class="eq-who">'+who+'</div>':'')+
   '</div>';
 }
-
-function taskCard(t, isPrimary) {
-  return '<div class="task-card'+(isPrimary?' active-primary':'')+'">'+
-    (isPrimary ? '<div class="t-badge active">&#x25CF; Active</div>' : '')+
-    '<div class="t-name">'+t.task+'</div>'+
-    (t.detail   ? '<div class="t-detail">'+t.detail+'</div>'   : '')+
-    (t.callSign ? '<div class="t-sign">'+t.callSign+'</div>'   : '')+
+function taskCard(t){
+  var detail=stripTime(t.detail);
+  return'<div class="task-item">'+
+    '<div class="task-name">'+t.task+'</div>'+
+    (detail?'<div class="task-who">'+detail+'</div>':'')+
+    (t.callSign?'<div class="task-who">'+t.callSign+'</div>':'')+
   '</div>';
 }
-
-function setM(id, val, col, warn) {
-  var el = document.getElementById(id); if (!el) return;
-  var v = el.querySelector('.val');
-  v.textContent = val; if (col) v.style.color = col;
-  el.style.borderTopColor = warn ? 'var(--red)' : v.style.color;
+function lrow(l,r){
+  return'<div class="list-row">'+l+'<span class="lv">'+r+'</span></div>';
 }
 
-function render() {
-  var personnel    = ls('fom_personnel', []);
+function setM(id,val,cls){
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.textContent=val;
+  el.className='stat-val'+(cls?' '+cls:'');
+}
+
+function render(){
+  var personnel    = ls('fom_personnel',[]);
   var deskOfficer  = raw('fom_deskOfficer');
   var currentDate  = raw('fom_currentDate');
   var shift        = raw('fom_shift');
-  var weather      = ls('fom_weather', {});
-  var secKeys      = ls('fom_securityKeys', []);
-  var supRadios    = ls('fom_supervisorRadios', []);
-  var offRadios    = ls('fom_officerRadios', []);
-  var otherRadios  = ls('fom_otherRadios', []);
-  var recorders    = ls('fom_recorders', []);
-  var notes        = ls('fom_notes', []);
-  var tasks        = ls('fom_secondaryTasks', []);
-  var primaryTask  = ls('fom_primaryTask', null); // reserved for future use
-  var oosState     = ls('fom_oos_state', {});
-  var oosIds       = (oosState && oosState.badges) || [];
-  var otherKeys    = ls('fom_otherKeys', []);
-  var accessBadges = ls('fom_accessBadges', []);
-  var satPhones    = ls('fom_satPhones', []);
+  var weather      = ls('fom_weather',{});
+  var secKeys      = ls('fom_securityKeys',[]);
+  var supRadios    = ls('fom_supervisorRadios',[]);
+  var offRadios    = ls('fom_officerRadios',[]);
+  var otherRadios  = ls('fom_otherRadios',[]);
+  var recorders    = ls('fom_recorders',[]);
+  var notes        = ls('fom_notes',[]);
+  var tasks        = ls('fom_secondaryTasks',[]);
+  var oosState     = ls('fom_oos_state',{});
+  var oosIds       = (oosState&&oosState.badges)||[];
+  var otherKeys    = ls('fom_otherKeys',[]);
+  var accessBadges = ls('fom_accessBadges',[]);
+  var satPhones    = ls('fom_satPhones',[]);
 
-  var active    = personnel.filter(function(p){ return p.name; });
+  var active    = personnel.filter(function(p){return p.name;});
   var allRadios = supRadios.concat(offRadios).concat(otherRadios);
-  var onBreak   = active.filter(function(p){ return p.posts && p.posts.some(function(x){ return x.isBreak; }); }).length;
-  var onPost    = active.filter(function(p){ return p.posts && p.posts.some(function(x){ return x.post && !x.isBreak; }); }).length;
-  var radiosOut = allRadios.filter(function(r){ return r.assignedTo && !r.oos; }).length;
-  var radiosOOS = allRadios.filter(function(r){ return r.oos; }).length;
-  var keysOut   = secKeys.filter(function(k){ return k.assignedTo && !k.oos; }).length;
-  var keysOOS   = secKeys.filter(function(k){ return k.oos; }).length;
-  var keysAvail = secKeys.filter(function(k){ return !k.assignedTo && !k.oos; }).length;
-  var recsOut   = recorders.filter(function(r){ return r.assignedTo && !r.oos; }).length;
-  var recsOOS   = recorders.filter(function(r){ return r.oos; }).length;
+  var onBreak   = active.filter(function(p){return p.posts&&p.posts.some(function(x){return x.isBreak;});}).length;
+  var onPost    = active.filter(function(p){return p.posts&&p.posts.some(function(x){return x.post&&!x.isBreak;});}).length;
+  var radiosOut = allRadios.filter(function(r){return r.assignedTo&&!r.oos;}).length;
+  var radiosOOS = allRadios.filter(function(r){return r.oos;}).length;
+  var keysOut   = secKeys.filter(function(k){return k.assignedTo&&!k.oos;}).length;
+  var keysOOS   = secKeys.filter(function(k){return k.oos;}).length;
+  var keysAvail = secKeys.filter(function(k){return!k.assignedTo&&!k.oos;}).length;
+  var recsOut   = recorders.filter(function(r){return r.assignedTo&&!r.oos;}).length;
+  var recsOOS   = recorders.filter(function(r){return r.oos;}).length;
   var badgesOOS = oosIds.length;
-  var totalOOS  = keysOOS + radiosOOS + recsOOS + badgesOOS;
+  var totalOOS  = keysOOS+radiosOOS+recsOOS+badgesOOS;
 
-  var supNames = active.filter(function(p){ return SUP_ROLES.indexOf(p.role)>=0 && p.role!=='OIC'; })
-    .map(function(p){ return sn(p.name); }).join(' / ') || '\u2014';
+  var supNames = active.filter(function(p){return SUP_ROLES.indexOf(p.role)>=0&&p.role!=='OIC';})
+    .map(function(p){return sn(p.name);}).join(' / ')||'\u2014';
 
-  // ── Header ──
-  var dateStr = currentDate ? (function(){
-    try { return new Date(currentDate+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}); }
-    catch(e) { return currentDate; }
-  }()) : 'No date set';
-  document.getElementById('date-sub').textContent    = dateStr + ' \u00b7 ' + shift + ' Shift';
-  document.getElementById('weather-display').textContent = weather.temp
-    ? weather.temp + (weather.conditions ? ' \u00b7 ' + weather.conditions : '') : '';
+  // ── Topbar ──
+  var dateStr = currentDate?(function(){
+    try{return new Date(currentDate+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});}
+    catch(e){return currentDate;}
+  }()):'';
+  document.getElementById('tb-shift').innerHTML = 'Shift <b>'+(shift||'\u2014')+(dateStr?' \u00b7 '+dateStr:'')+'</b>';
+  document.getElementById('tb-oic').innerHTML   = 'OIC <b>'+supNames+'</b>';
+  document.getElementById('tb-desk').innerHTML  = 'Desk <b>'+(deskOfficer||'\u2014')+'</b>';
+  document.getElementById('tb-weather').textContent = weather.temp?(weather.temp+(weather.conditions?' \u00b7 '+weather.conditions:'')):'';
+
+  // ── Stats ──
+  setM('m-duty',   active.length, active.length>0?'ok':'');
+  setM('m-post',   onPost,  '');
+  setM('m-break',  onBreak, onBreak>0?'warn':'');
+  setM('m-rout',   radiosOut,'');
+  setM('m-kout',   keysOut,  '');
+  setM('m-recout', recsOut,  '');
+  setM('m-boos',   badgesOOS, badgesOOS>0?'alert':'');
+  setM('m-toos',   totalOOS,  totalOOS>0?'alert':active.length>0?'ok':'');
 
   // ── Info bar ──
   document.getElementById('ib-sup').textContent   = supNames;
-  document.getElementById('ib-desk').textContent  = deskOfficer || '\u2014';
+  document.getElementById('ib-desk').textContent  = deskOfficer||'\u2014';
   document.getElementById('ib-stime').textContent = shiftTime(shift);
-  document.getElementById('ib-shift').textContent = shift || '\u2014';
+  document.getElementById('ib-shift').textContent = shift||'\u2014';
   document.getElementById('ib-duty').textContent  = active.length;
 
-  // ── Metrics ──
-  setM('m-duty',   active.length, 'var(--green)',  false);
-  setM('m-post',   onPost,        'var(--blue)',   false);
-  setM('m-break',  onBreak,       'var(--amber)',  false);
-  setM('m-rout',   radiosOut,     'var(--purple)', false);
-  setM('m-kout',   keysOut,       'var(--amber)',  false);
-  setM('m-recout', recsOut,       'var(--pink)',   false);
-  setM('m-boos',   badgesOOS,     'var(--red)',    badgesOOS > 0);
-  setM('m-toos',   totalOOS,      totalOOS > 0 ? 'var(--red)' : 'var(--green)', totalOOS > 0);
-
   // ── Roster ──
-  document.getElementById('roster-sub').textContent = '(' + active.length + ' active)';
-  var rhtml = '';
-  active.forEach(function(p) {
-    var isSup   = SUP_ROLES.indexOf(p.role) >= 0;
-    var isBreak = p.posts && p.posts.some(function(x){ return x.isBreak; });
-    var posts   = (p.posts||[]).filter(function(x){ return x.post && !x.isBreak; }).map(function(x){ return x.post; }).join(', ') || '\u2014';
-    rhtml += '<tr>'+
-      '<td><div class="name-cell">'+dot(isBreak?'var(--amber)':'var(--green)')+
-        (isSup?'<span class="sup-tag">SUP</span>':'')+
-        '<span style="font-weight:600;font-size:12px;">'+sn(p.name)+'</span></div></td>'+
-      '<td style="color:var(--subtle);font-size:11px;">'+(isBreak?'\ud83d\udd34 Break':posts)+'</td>'+
-      '<td style="color:var(--subtle);font-size:11px;">'+(p.radio||'\u2014')+'</td>'+
-      '<td style="color:var(--subtle);font-size:11px;">'+(p.key||'\u2014')+'</td>'+
-      '<td style="color:var(--subtle);font-size:11px;">'+(p.recorder||'\u2014')+'</td>'+
-      '<td style="color:var(--subtle);font-size:11px;">'+(p.badge||'\u2014')+'</td>'+
+  document.getElementById('roster-sub').textContent = '('+active.length+' active)';
+  var rhtml='';
+  active.forEach(function(p){
+    var isSup   = SUP_ROLES.indexOf(p.role)>=0;
+    var isBreak = p.posts&&p.posts.some(function(x){return x.isBreak;});
+    var posts   = (p.posts||[]).filter(function(x){return x.post&&!x.isBreak;}).map(function(x){return x.post;}).join(', ')||'\u2014';
+    var dotCol  = isBreak?'var(--amber)':isSup?'var(--purple)':'var(--green)';
+    var nameCls = isSup?'r-name r-sup':'r-name';
+    rhtml+='<tr>'+
+      '<td><span class="r-dot" style="background:'+dotCol+'"></span></td>'+
+      '<td class="'+nameCls+'">'+sn(p.name)+'</td>'+
+      '<td>'+(isBreak?'Break':posts)+'</td>'+
+      '<td>'+(p.radio||'\u2014')+'</td>'+
+      '<td>'+(p.key||'\u2014')+'</td>'+
+      '<td>'+(p.recorder||'\u2014')+'</td>'+
+      '<td>'+(p.badge||'\u2014')+'</td>'+
     '</tr>';
   });
-  document.getElementById('roster-body').innerHTML = rhtml ||
-    '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:14px;font-size:12px;">No officers on duty</td></tr>';
+  document.getElementById('roster-body').innerHTML=rhtml||
+    '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:14px;font-size:10px;">No officers on duty</td></tr>';
 
-  // ── Primary Tasks — derived from personnel post assignments ──
-  var PRIMARY_POSTS = ['Mall', 'Vehicle', 'Desk', 'Special'];
-  var POST_COLORS = { Mall: 'var(--blue)', Vehicle: 'var(--amber)', Desk: 'var(--green)', Special: 'var(--purple)' };
-  var POST_ICONS  = { Mall: '\uD83C\uDFEC', Vehicle: '\uD83D\uDE97', Desk: '\uD83D\uDCCB', Special: '\u2605' };
-
-  var byPost = {};
-  PRIMARY_POSTS.forEach(function(p){ byPost[p] = []; });
-  active.forEach(function(p) {
-    (p.posts||[]).forEach(function(pp) {
-      if (pp.post && !pp.isBreak && byPost[pp.post] !== undefined) {
-        if (isActive(pp.from, pp.to)) {
-          byPost[pp.post].push(sn(p.name));
-        }
+  // ── Primary Tasks ──
+  var byPost={};
+  PRIMARY_POSTS.forEach(function(p){byPost[p]=[];});
+  active.forEach(function(p){
+    (p.posts||[]).forEach(function(pp){
+      if(pp.post&&!pp.isBreak&&byPost[pp.post]!==undefined){
+        if(isActive(pp.from,pp.to)) byPost[pp.post].push(sn(p.name));
       }
     });
   });
-
-  var activePosts = PRIMARY_POSTS.filter(function(p){ return byPost[p].length > 0; });
-  var ptHTML = activePosts.length
-    ? activePosts.map(function(postName) {
-        var officers = byPost[postName];
-        var col = POST_COLORS[postName];
-        var icon = POST_ICONS[postName];
-        return '<div style="border:1px solid rgba(255,255,255,0.08);border-left:3px solid '+col+';border-radius:8px;padding:9px 11px;margin-bottom:7px;background:rgba(0,0,0,0.2);">'+
-          '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">'+
-            '<span style="font-size:14px;">'+icon+'</span>'+
-            '<span style="font-size:11px;font-weight:700;color:'+col+';text-transform:uppercase;letter-spacing:.05em;">'+postName+'</span>'+
-            '<span style="font-size:10px;color:var(--muted);margin-left:auto;">'+officers.length+'</span>'+
-          '</div>'+
-          officers.map(function(name){
-            return '<div style="font-size:12px;font-weight:600;color:var(--text);padding:2px 0;display:flex;align-items:center;gap:5px;">'+
-              '<span style="width:6px;height:6px;border-radius:50%;background:'+col+';display:inline-block;flex-shrink:0;"></span>'+name+'</div>';
-          }).join('')+
+  var activePosts=PRIMARY_POSTS.filter(function(p){return byPost[p].length>0;});
+  var ptHTML=activePosts.length
+    ?'<div class="task-list">'+activePosts.map(function(pn){
+        var officers=byPost[pn];
+        var col=POST_COLORS[pn];
+        return'<div class="task-item active" style="border-left-color:'+col+';background:rgba(0,0,0,0.2)">'+
+          '<div class="task-name" style="color:var(--text)">'+pn+'</div>'+
+          '<div class="task-who">'+officers.join(', ')+'</div>'+
         '</div>';
-      }).join('')
-    : '<div class="no-data">No active assignments</div>';
+      }).join('')+'</div>'
+    :'<div class="no-data">No active assignments</div>';
+  document.getElementById('primary-task-area').innerHTML=ptHTML;
 
-  document.getElementById('primary-task-area').innerHTML = ptHTML;
-
-  // ── Secondary Tasks — show only tasks whose time falls within current shift ──
-  var shiftBounds = shift==='Morning' ? {from:'07:00',to:'15:00'}
-                  : shift==='Evening' ? {from:'15:00',to:'23:00'}
-                  : shift==='Night'   ? {from:'23:00',to:'07:00'}
-                  : {from:null,to:null};
-
-  function taskInShift(timeStr) {
-    if (!timeStr || !timeStr.trim()) return true; // no time — always show
-    if (!shiftBounds.from) return true;           // unknown shift — always show
-    var tm = parseMins(timeStr);
-    if (tm === null) return true;
-    var sf = parseMins(shiftBounds.from), st = parseMins(shiftBounds.to);
-    if (st <= sf) st += 1440;          // overnight wrap (Night shift)
-    var tm2 = tm < sf ? tm + 1440 : tm; // align to same window
-    return tm2 >= sf && tm2 < st;
-  }
-
-  var activeTasks = tasks.filter(function(t) {
-    return (t.callSign && t.callSign.trim()) && taskInShift(t.time);
+  // ── Secondary Tasks ──
+  var activeCS={};
+  active.forEach(function(p){
+    var cs=normCS(p.callSign);
+    if(!cs)return;
+    (p.posts||[]).forEach(function(pp){
+      if(pp.post&&!pp.isBreak&&PRIMARY_POSTS.indexOf(pp.post)>=0){
+        if(isActive(pp.from,pp.to)) activeCS[cs]=true;
+      }
+    });
   });
-  document.getElementById('sec-task-sub').textContent = activeTasks.length ? '('+activeTasks.length+')' : '';
-  document.getElementById('tasks-list').innerHTML = activeTasks.length
-    ? activeTasks.map(function(t){ return taskCard(t, false); }).join('')
-    : '<div class="no-data">No active tasks</div>';
+  var activeTasks=tasks.filter(function(t){
+    if(!t.callSign||!t.callSign.trim())return false;
+    return activeCS[normCS(t.callSign)]===true;
+  });
+  document.getElementById('sec-task-sub').textContent=activeTasks.length?'('+activeTasks.length+')':'';
+  document.getElementById('tasks-list').innerHTML=activeTasks.length
+    ?activeTasks.map(function(t){return taskCard(t);}).join('')
+    :'<div class="no-data">No active tasks</div>';
 
-  // ── Supervisor Radios ──
-  var supOut = supRadios.filter(function(r){ return r.assignedTo && !r.oos; }).length;
-  var supAvail = supRadios.filter(function(r){ return !r.assignedTo && !r.oos; }).length;
-  var supOOS = supRadios.filter(function(r){ return r.oos; }).length;
-  document.getElementById('sup-radio-sub').textContent = supOut+' out \u00b7 '+supAvail+' avail \u00b7 '+supOOS+' OOS';
-  document.getElementById('sup-radio-grid').innerHTML = supRadios.length
-    ? supRadios.map(function(r){
-        var oos=!!r.oos, out=!!r.assignedTo&&!r.oos;
-        return eqCard(r.id, oos?'oos':out?'out':'avail', oos?'OOS':out?'Out':'Available', out?sn(r.assignedTo):'');
-      }).join('') : noData();
+  // ── Sup Radios ──
+  var supOut=supRadios.filter(function(r){return r.assignedTo&&!r.oos;}).length;
+  var supAvail=supRadios.filter(function(r){return!r.assignedTo&&!r.oos;}).length;
+  var supOOS=supRadios.filter(function(r){return r.oos;}).length;
+  document.getElementById('sup-radio-sub').textContent=supOut+' out \u00b7 '+supAvail+' avail \u00b7 '+supOOS+' OOS';
+  document.getElementById('sup-radio-grid').innerHTML=supRadios.length
+    ?supRadios.map(function(r){
+        var oos=!!r.oos,out=!!r.assignedTo&&!r.oos;
+        return eqCard(r.id,oos?'oos':out?'out':'avail',oos?'OOS':out?'Out':'Avail',out?sn(r.assignedTo):'');
+      }).join(''):noData();
 
   // ── Officer Radios ──
-  var offOut = offRadios.filter(function(r){ return r.assignedTo && !r.oos; }).length;
-  var offAvail = offRadios.filter(function(r){ return !r.assignedTo && !r.oos; }).length;
-  var offOOS = offRadios.filter(function(r){ return r.oos; }).length;
-  document.getElementById('off-radio-sub').textContent = offOut+' out \u00b7 '+offAvail+' avail \u00b7 '+offOOS+' OOS';
-  document.getElementById('off-radio-grid').innerHTML = offRadios.length
-    ? offRadios.map(function(r){
-        var oos=!!r.oos, out=!!r.assignedTo&&!r.oos;
-        return eqCard(r.id, oos?'oos':out?'out':'avail', oos?'OOS':out?'Out':'Available', out?sn(r.assignedTo):'');
-      }).join('') : noData();
+  var offOut=offRadios.filter(function(r){return r.assignedTo&&!r.oos;}).length;
+  var offAvail=offRadios.filter(function(r){return!r.assignedTo&&!r.oos;}).length;
+  var offOOS=offRadios.filter(function(r){return r.oos;}).length;
+  document.getElementById('off-radio-sub').textContent=offOut+' out \u00b7 '+offAvail+' avail \u00b7 '+offOOS+' OOS';
+  document.getElementById('off-radio-grid').innerHTML=offRadios.length
+    ?offRadios.map(function(r){
+        var oos=!!r.oos,out=!!r.assignedTo&&!r.oos;
+        return eqCard(r.id,oos?'oos':out?'out':'avail',oos?'OOS':out?'Out':'Avail',out?sn(r.assignedTo):'');
+      }).join(''):noData();
 
-  // ── Security Keys ──
-  document.getElementById('key-sub').textContent = keysOut+' out \u00b7 '+keysAvail+' avail \u00b7 '+keysOOS+' OOS';
-  var khtml = '';
-  secKeys.filter(function(k){ return k.assignedTo && !k.oos; }).forEach(function(k){
-    khtml += lrow(dot('var(--amber)')+'<span class="flex1">Key '+k.number+'</span>', sn(k.assignedTo));
+  // ── Keys ──
+  document.getElementById('key-sub').textContent=keysOut+' out \u00b7 '+keysAvail+' avail \u00b7 '+keysOOS+' OOS';
+  var khtml='';
+  secKeys.filter(function(k){return k.assignedTo&&!k.oos;}).forEach(function(k){
+    khtml+=lrow(ldot('var(--amber)')+'<span class="lf">Key '+k.number+'</span>',sn(k.assignedTo));
   });
-  secKeys.filter(function(k){ return k.oos; }).forEach(function(k){
-    khtml += lrow(dot('var(--red)')+'<span class="flex1" style="color:var(--red)">Key '+k.number+'</span>', chip('OOS','#fff','#7f1d1d'));
+  secKeys.filter(function(k){return k.oos;}).forEach(function(k){
+    khtml+=lrow(ldot('var(--red)')+'<span class="lf" style="color:var(--red)">Key '+k.number+'</span>',chip('OOS','#c0392b','rgba(192,57,43,0.15)'));
   });
-  document.getElementById('key-list').innerHTML = khtml || noData('None assigned');
+  document.getElementById('key-list').innerHTML=khtml||noData('None assigned');
 
   // ── Recorders ──
-  document.getElementById('rec-sub').textContent = recsOut+' out \u00b7 '+recsOOS+' OOS';
-  document.getElementById('rec-grid').innerHTML = recorders.length
-    ? recorders.map(function(r){
-        var oos=!!r.oos, out=!!r.assignedTo&&!r.oos;
-        return eqCard('#'+r.id, oos?'oos':out?'out':'avail', oos?'OOS':out?'Out':'Available', out?sn(r.assignedTo):'');
-      }).join('') : noData();
+  document.getElementById('rec-sub').textContent=recsOut+' out \u00b7 '+recsOOS+' OOS';
+  document.getElementById('rec-grid').innerHTML=recorders.length
+    ?recorders.map(function(r){
+        var oos=!!r.oos,out=!!r.assignedTo&&!r.oos;
+        return eqCard('#'+r.id,oos?'oos':out?'out':'avail',oos?'OOS':out?'Out':'Avail',out?sn(r.assignedTo):'');
+      }).join(''):noData();
 
   // ── Other Radios ──
-  var otherOut = otherRadios.filter(function(r){ return r.assignedTo && !r.oos; }).length;
-  document.getElementById('other-radio-sub').textContent = otherOut + ' assigned';
-  document.getElementById('other-radio-grid').innerHTML = otherRadios.length
-    ? otherRadios.map(function(r){
-        var oos=!!r.oos, out=!!r.assignedTo&&!r.oos;
-        return eqCard(r.id, oos?'oos':out?'out':'avail', oos?'OOS':out?'Out':'Available', r.assignedTo?sn(r.assignedTo):'');
-      }).join('') : noData();
+  var otherOut=otherRadios.filter(function(r){return r.assignedTo&&!r.oos;}).length;
+  document.getElementById('other-radio-sub').textContent=otherOut+' assigned';
+  document.getElementById('other-radio-grid').innerHTML=otherRadios.length
+    ?otherRadios.map(function(r){
+        var oos=!!r.oos,out=!!r.assignedTo&&!r.oos;
+        return eqCard(r.id,oos?'oos':out?'out':'avail',oos?'OOS':out?'Out':'Avail',r.assignedTo?sn(r.assignedTo):'');
+      }).join(''):noData();
 
-  // ── Access & Other Items ──
-  var okeys  = otherKeys.filter(function(k){ return !k.available && k.assignedTo; }).length;
-  var obadge = accessBadges.filter(function(a){ return !a.available && !a.oos; }).length;
-  var osat   = satPhones.filter(function(s){ return !s.available && !s.oos; }).length;
-  document.getElementById('other-items-list').innerHTML =
-    lrow(dot('var(--teal)')+'<span class="flex1">Other keys out</span>',   '<span style="font-weight:700;color:var(--teal)">'+okeys+'</span>')+
-    lrow(dot('var(--blue)')+'<span class="flex1">Access badges out</span>','<span style="font-weight:700;color:var(--blue)">'+obadge+'</span>')+
-    lrow(dot('var(--purple)')+'<span class="flex1">Sat phones out</span>', '<span style="font-weight:700;color:var(--purple)">'+osat+'</span>');
+  // ── Access & Other ──
+  var okeys  = otherKeys.filter(function(k){return!k.available&&k.assignedTo;}).length;
+  var obadge = accessBadges.filter(function(a){return!a.available&&!a.oos;}).length;
+  var osat   = satPhones.filter(function(s){return!s.available&&!s.oos;}).length;
+  document.getElementById('other-items-list').innerHTML=
+    lrow(ldot('var(--blue)')+'<span class="lf">Other keys out</span>',  okeys)+
+    lrow(ldot('var(--blue)')+'<span class="lf">Access badges out</span>',obadge)+
+    lrow(ldot('var(--blue)')+'<span class="lf">Sat phones out</span>',  osat);
 
   // ── OOS bar ──
-  if (totalOOS > 0) {
-    document.getElementById('oos-bar').style.display = 'block';
-    document.getElementById('oos-title').textContent = '\u26a0 Out of Service \u2014 '+totalOOS+' item'+(totalOOS!==1?'s':'');
-    var chips = [];
-    secKeys.filter(function(k){ return k.oos; }).forEach(function(k){ chips.push(chip('Key '+k.number,'#fff','#7f1d1d')); });
-    allRadios.filter(function(r){ return r.oos; }).forEach(function(r){ chips.push(chip('Radio '+r.id,'#fff','#7f1d1d')); });
-    recorders.filter(function(r){ return r.oos; }).forEach(function(r){ chips.push(chip('Rec '+r.id,'#fff','#7f1d1d')); });
-    oosIds.forEach(function(id){ chips.push(chip('Badge '+id,'#fff','#7f1d1d')); });
-    document.getElementById('oos-chips').innerHTML = chips.join(' ');
+  var oosBar=document.getElementById('oos-bar');
+  if(totalOOS>0){
+    oosBar.style.display='flex';
+    document.getElementById('oos-title').textContent='\u26a0 Out of Service \u2014 '+totalOOS+' item'+(totalOOS!==1?'s':'');
+    var chips=[];
+    secKeys.filter(function(k){return k.oos;}).forEach(function(k){chips.push(chip('Key '+k.number,'#c0392b','rgba(192,57,43,0.15)'));});
+    allRadios.filter(function(r){return r.oos;}).forEach(function(r){chips.push(chip('Radio '+r.id,'#c0392b','rgba(192,57,43,0.15)'));});
+    recorders.filter(function(r){return r.oos;}).forEach(function(r){chips.push(chip('Rec '+r.id,'#c0392b','rgba(192,57,43,0.15)'));});
+    oosIds.forEach(function(id){chips.push(chip('Badge '+id,'#c0392b','rgba(192,57,43,0.15)'));});
+    document.getElementById('oos-chips').innerHTML=chips.join('');
   } else {
-    document.getElementById('oos-bar').style.display = 'none';
+    oosBar.style.display='none';
   }
 
-  document.getElementById('last-updated').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+  document.getElementById('last-updated').textContent='Updated '+new Date().toLocaleTimeString();
 }
 
-setInterval(function(){ document.getElementById('clock').textContent = nowET(); }, 1000);
-document.getElementById('clock').textContent = nowET();
+// Clock
+setInterval(function(){document.getElementById('tb-clock').textContent=nowET();},1000);
+document.getElementById('tb-clock').textContent=nowET();
+
+// Run
 render();
-setInterval(render, 30000);
-window.addEventListener('fom-cloud-updated', render);
-window.addEventListener('storage', function(e){ if (e.key && e.key.indexOf('fom_')===0) render(); });
+setInterval(render,30000);
+window.addEventListener('fom-cloud-updated',render);
+window.addEventListener('storage',function(e){if(e.key&&e.key.indexOf('fom_')===0)render();});
 </script>
 </body>
 </html>
