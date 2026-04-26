@@ -2509,6 +2509,12 @@ var FOM_REGISTRATION_URL = '/';
       actList.appendChild(makeActBtn(audIcon,'Audit Log','#8b5cf6',function(){openAuditLog();}));
     }
 
+    // Command Dashboard button
+    if(level==='exec'||level==='supervisor'||level==='developer'){
+      var dbIcon='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>';
+      actList.appendChild(makeActBtn(dbIcon,'Command Dashboard','#1d4ed8',function(){openCommandDashboard();}));
+    }
+
     /* Pending Approvals */
     var pendingCount=0;
     try{var _pa=JSON.parse(localStorage.getItem('fom_pending_approvals')||'[]');pendingCount=Array.isArray(_pa)?_pa.length:0;}catch(e){}
@@ -3307,6 +3313,257 @@ function fomApplyTheme(id){
     if(!modal.contains(e.target)){modal.classList.remove('open');}
   },true);
 })();
+</script>
+
+<script>
+// ── FOM Command Dashboard ──────────────────────────────────────────────────
+function openCommandDashboard() {
+  var existing = document.getElementById('fom-cmd-dashboard');
+  if (existing) { existing.remove(); return; }
+
+  function ls(key, fallback) {
+    try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch(e) { return fallback; }
+  }
+
+  var personnel   = ls('fom_personnel', []);
+  var deskOfficer = localStorage.getItem('fom_deskOfficer') || '';
+  var currentDate = localStorage.getItem('fom_currentDate') || '';
+  var shift       = localStorage.getItem('fom_shift') || '';
+  var weather     = ls('fom_weather', {temp:'',conditions:''});
+  var secKeys     = ls('fom_securityKeys', []);
+  var supRadios   = ls('fom_supervisorRadios', []);
+  var offRadios   = ls('fom_officerRadios', []);
+  var otherRadios = ls('fom_otherRadios', []);
+  var recorders   = ls('fom_recorders', []);
+  var flashlights = ls('fom_flashlights', []);
+  var notes       = ls('fom_notes', []);
+  var tasks       = ls('fom_secondaryTasks', []);
+  var oosState    = ls('fom_oos_state', {});
+  var oosIds      = (oosState && oosState.badges) || [];
+  var otherKeys   = ls('fom_otherKeys', []);
+  var accessBadges = ls('fom_accessBadges', []);
+  var satPhones   = ls('fom_satPhones', []);
+
+  var SUP_ROLES = ['Dir/AD/Lt','Sergeant','OIC','Lieutenant','Director of Security','Assistant Director','Director','Developer'];
+  var active    = personnel.filter(function(p){ return p.name; });
+  var onBreak   = active.filter(function(p){ return p.posts && p.posts.some(function(pp){ return pp.isBreak; }); }).length;
+  var onPost    = active.filter(function(p){ return p.posts && p.posts.some(function(pp){ return pp.post && !pp.isBreak; }); }).length;
+  var allRadios = supRadios.concat(offRadios).concat(otherRadios);
+  var radiosOut = allRadios.filter(function(r){ return r.assignedTo && !r.oos; }).length;
+  var radiosOOS = allRadios.filter(function(r){ return r.oos; }).length;
+  var keysOut   = secKeys.filter(function(k){ return k.assignedTo && !k.oos; }).length;
+  var keysOOS   = secKeys.filter(function(k){ return k.oos; }).length;
+  var recsOut   = recorders.filter(function(r){ return r.assignedTo && !r.oos; }).length;
+  var recsOOS   = recorders.filter(function(r){ return r.oos; }).length;
+  var badgesOOS = oosIds.length;
+  var totalOOS  = keysOOS + radiosOOS + recsOOS + badgesOOS;
+  var otherKeysOut = otherKeys.filter(function(k){ return !k.available && k.assignedTo; }).length;
+  var accessBadgesOut = accessBadges.filter(function(a){ return !a.available && !a.oos; }).length;
+  var satPhonesOut = satPhones.filter(function(s){ return !s.available && !s.oos; }).length;
+
+  function sn(n) {
+    if (!n) return '—';
+    n = n.replace(/^(Dir\.|AD\.|Lt\.|Sgt\.|Ofc\.)\s*/i,'').replace(/\s*\([^)]*\)\s*/g,' ').trim();
+    if (n.indexOf(',') >= 0) return n.split(',')[0].trim();
+    var p = n.split(/\s+/);
+    return p.length > 1 ? p[p.length-1] : p[0];
+  }
+
+  var dateStr = currentDate ? (function(){
+    try { return new Date(currentDate+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}); } catch(e){ return currentDate; }
+  }()) : 'No date set';
+
+  function nowET() {
+    try { return new Date().toLocaleString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',hour12:false}); } catch(e){ return ''; }
+  }
+  function shiftTime(s) {
+    return s==='Morning'?'07:00–15:00':s==='Evening'?'15:00–23:00':s==='Night'?'23:00–07:00':s||'—';
+  }
+  function dot(c) { return '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+c+';flex-shrink:0;margin-right:6px;"></span>'; }
+  function chip(txt,col,bg) { return '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;color:'+col+';background:'+bg+';">'+txt+'</span>'; }
+  function metCard(val,lbl,col,warn) {
+    return '<div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-top:3px solid '+(warn?'#f87171':col)+';border-radius:8px;padding:10px 6px;text-align:center;">'+
+      '<div style="font-size:24px;font-weight:700;color:'+col+';line-height:1;">'+val+'</div>'+
+      '<div style="font-size:9px;color:#94a3b8;font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.06em;">'+lbl+'</div>'+
+    '</div>';
+  }
+  function card(title, body) {
+    return '<div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px 14px;">'+
+      '<div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;">'+title+'</div>'+
+      body+
+    '</div>';
+  }
+  function row(content, last) {
+    return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;'+(last?'':'border-bottom:1px solid rgba(255,255,255,0.07);')+'">'+content+'</div>';
+  }
+
+  // Supervisor names
+  var supNames = active.filter(function(p){ return SUP_ROLES.indexOf(p.role)>=0 && p.role!=='OIC'; })
+    .map(function(p){ return sn(p.name); }).join(' / ') || '—';
+
+  // Roster table rows
+  var rosterRows = '';
+  active.forEach(function(p) {
+    var isSup   = SUP_ROLES.indexOf(p.role) >= 0;
+    var isBreak = p.posts && p.posts.some(function(pp){ return pp.isBreak; });
+    var posts   = (p.posts||[]).filter(function(pp){ return pp.post && !pp.isBreak; }).map(function(pp){ return pp.post; }).join(', ') || '—';
+    rosterRows += '<tr style="border-bottom:1px solid rgba(255,255,255,0.07);font-size:12px;">'+
+      '<td style="padding:5px 6px;white-space:nowrap;">'+dot(isBreak?'#fbbf24':'#4ade80')+
+        (isSup?'<span style="font-size:9px;background:rgba(201,168,76,0.2);color:#c9a84c;border-radius:3px;padding:1px 4px;margin-right:4px;font-weight:700;">SUP</span>':'')+
+        '<span style="font-weight:600;">'+sn(p.name)+'</span></td>'+
+      '<td style="padding:5px 6px;color:#94a3b8;">'+(isBreak?'🔴 Break':posts)+'</td>'+
+      '<td style="padding:5px 6px;color:#94a3b8;">'+(p.radio||'—')+'</td>'+
+      '<td style="padding:5px 6px;color:#94a3b8;">'+(p.key||'—')+'</td>'+
+      '<td style="padding:5px 6px;color:#94a3b8;">'+(p.recorder||'—')+'</td>'+
+      '<td style="padding:5px 6px;color:#94a3b8;">'+(p.badge||'—')+'</td>'+
+    '</tr>';
+  });
+  if (!rosterRows) rosterRows = '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:12px;font-size:12px;">No officers on duty</td></tr>';
+
+  // Radios assigned list
+  var radioRows = '';
+  supRadios.concat(offRadios).filter(function(r){ return r.assignedTo && !r.oos; }).forEach(function(r){
+    radioRows += row(dot('#a78bfa')+'<span style="flex:1;">Radio '+r.id+'</span><span style="color:#94a3b8;">'+sn(r.assignedTo)+'</span>');
+  });
+  allRadios.filter(function(r){ return r.oos; }).forEach(function(r){
+    radioRows += row(dot('#f87171')+'<span style="flex:1;color:#f87171;">Radio '+r.id+'</span>'+chip('OOS','#fff','#7f1d1d'));
+  });
+
+  // Keys list
+  var keyRows = '';
+  secKeys.filter(function(k){ return k.assignedTo && !k.oos; }).forEach(function(k){
+    keyRows += row(dot('#fbbf24')+'<span style="flex:1;">Key '+k.number+'</span><span style="color:#94a3b8;">'+sn(k.assignedTo)+'</span>');
+  });
+
+  // Recorders list
+  var recRows = '';
+  recorders.forEach(function(r){
+    var isOOS=!!r.oos, isOut=!!r.assignedTo&&!r.oos;
+    var col = isOOS?'#f87171':isOut?'#f472b6':'#4ade80';
+    recRows += row(dot(col)+'<span style="flex:1;">Rec '+r.id+'</span>'+(isOOS?chip('OOS','#fff','#7f1d1d'):isOut?'<span style="color:#94a3b8;">'+sn(r.assignedTo)+'</span>':chip('Avail','#065f46','#d1fae5')));
+  });
+
+  // Other radios (management/engineering)
+  var otherRadioRows = '';
+  otherRadios.forEach(function(r){
+    var isOOS=!!r.oos, hasHolder=!!r.assignedTo;
+    var col = isOOS?'#f87171':hasHolder?'#a78bfa':'#4ade80';
+    otherRadioRows += row(dot(col)+'<span style="flex:1;">Radio '+r.id+'</span><span style="color:#94a3b8;">'+(r.assignedTo||(isOOS?'OOS':'Available'))+'</span>');
+  });
+
+  // Notes
+  var notesHTML = notes.length
+    ? notes.map(function(n){ return '<div style="display:flex;gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);font-size:12px;line-height:1.5;"><span style="color:#c9a84c;font-weight:700;">•</span><span>'+n+'</span></div>'; }).join('')
+    : '<div style="color:#64748b;font-size:12px;padding:8px 0;">No notes for this shift</div>';
+
+  // Tasks
+  var tasksHTML = tasks.length
+    ? tasks.map(function(t){ return '<div style="padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.07);"><div style="font-size:12px;font-weight:600;">'+t.task+'</div>'+(t.detail?'<div style="font-size:11px;color:#94a3b8;">'+t.detail+'</div>':'')+(t.callSign?'<div style="font-size:11px;color:#c9a84c;">'+t.callSign+'</div>':'')+'</div>'; }).join('')
+    : '<div style="color:#64748b;font-size:12px;padding:8px 0;">No secondary tasks</div>';
+
+  // OOS summary items
+  var oosChips = [
+    secKeys.filter(function(k){ return k.oos; }).map(function(k){ return chip('Key '+k.number,'#fff','#7f1d1d'); }).join(' '),
+    allRadios.filter(function(r){ return r.oos; }).map(function(r){ return chip('Radio '+r.id,'#fff','#7f1d1d'); }).join(' '),
+    recorders.filter(function(r){ return r.oos; }).map(function(r){ return chip('Rec '+r.id,'#fff','#7f1d1d'); }).join(' '),
+    oosIds.map(function(id){ return chip('Badge '+id,'#fff','#7f1d1d'); }).join(' ')
+  ].filter(function(x){ return x; }).join(' ');
+
+  var avail = allRadios.filter(function(r){ return !r.assignedTo && !r.oos; }).length;
+  var keysAvail = secKeys.filter(function(k){ return !k.assignedTo && !k.oos; }).length;
+
+  var html =
+    '<div id="fom-cmd-dashboard" style="position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.88);overflow-y:auto;padding:14px;box-sizing:border-box;">'+
+    '<div style="max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:10px;">'+
+
+    // Top bar
+    '<div style="display:flex;justify-content:space-between;align-items:center;">'+
+      '<span style="color:#c9a84c;font-size:16px;font-weight:800;">⚡ FOM Command Dashboard</span>'+
+      '<button onclick="document.getElementById(\"fom-cmd-dashboard\").remove()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:18px;width:34px;height:34px;border-radius:50%;cursor:pointer;line-height:1;">✕</button>'+
+    '</div>'+
+
+    // Header
+    '<div style="background:linear-gradient(135deg,#0a1830 0%,#1e3a5f 60%,rgba(201,168,76,0.12) 100%);border-radius:10px;overflow:hidden;">'+
+      '<div style="padding:12px 18px;display:flex;justify-content:space-between;align-items:center;">'+
+        '<div>'+
+          '<div style="font-size:15px;font-weight:800;color:#fff;">Fair Oaks Mall Security</div>'+
+          '<div style="font-size:11px;color:#94a3b8;margin-top:2px;">'+dateStr+' · '+shift+' Shift</div>'+
+        '</div>'+
+        '<div style="text-align:right;">'+
+          '<div style="font-size:20px;font-weight:800;color:#c9a84c;">'+nowET()+'</div>'+
+          (weather.temp ? '<div style="font-size:11px;color:#94a3b8;margin-top:1px;">'+weather.temp+(weather.conditions?' · '+weather.conditions:'')+'</div>' : '')+
+        '</div>'+
+      '</div>'+
+      '<div style="background:rgba(0,0,0,0.25);padding:8px 18px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;border-top:1px solid rgba(255,255,255,0.1);">'+
+        '<div><div style="font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;">Supervisor</div><div style="font-size:12px;font-weight:700;color:#fff;margin-top:2px;">'+supNames+'</div></div>'+
+        '<div><div style="font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;">Desk Officer</div><div style="font-size:12px;font-weight:700;color:#fff;margin-top:2px;">'+(deskOfficer||'—')+'</div></div>'+
+        '<div><div style="font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;">Shift Time</div><div style="font-size:12px;font-weight:700;color:#fff;margin-top:2px;">'+shiftTime(shift)+'</div></div>'+
+        '<div><div style="font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;">On Duty</div><div style="font-size:12px;font-weight:700;color:#4ade80;margin-top:2px;">'+active.length+'</div></div>'+
+      '</div>'+
+    '</div>'+
+
+    // Metric strip
+    '<div style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;">'+
+      metCard(active.length,'On Duty','#4ade80',false)+
+      metCard(onPost,'On Post','#60a5fa',false)+
+      metCard(onBreak,'On Break','#fbbf24',false)+
+      metCard(radiosOut,'Radios Out','#a78bfa',false)+
+      metCard(keysOut,'Keys Out','#fbbf24',false)+
+      metCard(recsOut,'Recorders','#f472b6',false)+
+      metCard(badgesOOS,'Badges OOS','#f87171',badgesOOS>0)+
+      metCard(totalOOS,'Total OOS',totalOOS>0?'#f87171':'#4ade80',totalOOS>0)+
+    '</div>'+
+
+    // Row 1: Roster + equipment
+    '<div style="display:grid;grid-template-columns:1.4fr 1fr;gap:10px;">'+
+
+      card('Officer Roster &nbsp;<span style="color:#475569;">('+active.length+' active)</span>',
+        '<table style="width:100%;border-collapse:collapse;">'+
+          '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1);">'+
+            ['Officer','Post','Radio','Key','Rec','Badge'].map(function(h){
+              return '<th style="text-align:left;padding:3px 6px;font-size:9px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;">'+h+'</th>';
+            }).join('')+
+          '</tr></thead><tbody>'+rosterRows+'</tbody></table>'
+      )+
+
+      '<div style="display:flex;flex-direction:column;gap:8px;">'+
+        card('Radios &nbsp;<span style="color:#475569;font-weight:400;">'+radiosOut+' out · '+avail+' avail · '+radiosOOS+' OOS</span>',
+          radioRows || '<div style="color:#64748b;font-size:12px;">None assigned</div>')+
+        card('Security Keys &nbsp;<span style="color:#475569;font-weight:400;">'+keysOut+' out · '+keysAvail+' avail · '+keysOOS+' OOS</span>',
+          keyRows || '<div style="color:#64748b;font-size:12px;">None assigned</div>')+
+      '</div>'+
+    '</div>'+
+
+    // Row 2: Recorders + Notes + Tasks
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">'+
+      card('Recorders &nbsp;<span style="color:#475569;font-weight:400;">'+recsOut+' out · '+recsOOS+' OOS</span>', recRows)+
+      card('Shift Notes', notesHTML)+
+      card('Secondary Tasks', tasksHTML)+
+    '</div>'+
+
+    // Row 3: Other Radios + Access items
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'+
+      card('Management & Other Radios', otherRadioRows || '<div style="color:#64748b;font-size:12px;">None</div>')+
+      card('Access & Other Items',
+        row(dot('#2dd4bf')+'<span style="flex:1;">Other keys out</span><span style="font-weight:700;color:#2dd4bf;">'+otherKeysOut+'</span>')+
+        row(dot('#60a5fa')+'<span style="flex:1;">Access badges out</span><span style="font-weight:700;color:#60a5fa;">'+accessBadgesOut+'</span>')+
+        row(dot('#a78bfa')+'<span style="flex:1;">Sat phones out</span><span style="font-weight:700;color:#a78bfa;">'+satPhonesOut+'</span>', true)
+      )+
+    '</div>'+
+
+    // OOS summary
+    (totalOOS>0
+      ? '<div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.3);border-left:4px solid #f87171;border-radius:10px;padding:10px 14px;">'+
+          '<div style="font-size:10px;font-weight:700;color:#f87171;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;">⚠ Out of Service — '+totalOOS+' item'+(totalOOS!==1?'s':'')+'</div>'+
+          '<div style="display:flex;flex-wrap:wrap;gap:6px;">'+oosChips+'</div>'+
+        '</div>'
+      : '')+
+
+    '</div></div>';
+
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+// ── End FOM Command Dashboard ─────────────────────────────────────────────
 </script>
 
 </body>
