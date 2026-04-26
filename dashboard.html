@@ -505,17 +505,16 @@ function render(){
     // Individual horizontal sub-cards
     var subCards = [];
     if(isBreak){
-      subCards.push('<div class="oc-sub"><span class="oc-sub-label">Status</span><span class="oc-sub-val break">On Break</span></div>');
+      subCards.push('<div class="oc-sub"><span class="oc-sub-val break">On Break</span></div>');
     } else {
       posts.forEach(function(pp){
-        var t = pp.post+(pp.from&&pp.to?' '+pp.from+'–'+pp.to:'');
-        subCards.push('<div class="oc-sub"><span class="oc-sub-label">Post</span><span class="oc-sub-val post">'+t+'</span></div>');
+        subCards.push('<div class="oc-sub"><span class="oc-sub-val post">'+pp.post+'</span></div>');
       });
     }
-    if(p.radio)    subCards.push('<div class="oc-sub"><span class="oc-sub-label">Radio</span><span class="oc-sub-val">'+p.radio+'</span></div>');
-    if(p.key)      subCards.push('<div class="oc-sub"><span class="oc-sub-label">Key</span><span class="oc-sub-val">'+p.key+'</span></div>');
+    if(p.radio)    subCards.push('<div class="oc-sub"><span class="oc-sub-label">R</span><span class="oc-sub-val">'+p.radio+'</span></div>');
+    if(p.key)      subCards.push('<div class="oc-sub"><span class="oc-sub-label">K</span><span class="oc-sub-val">'+p.key+'</span></div>');
     if(p.recorder) subCards.push('<div class="oc-sub"><span class="oc-sub-label">Rec</span><span class="oc-sub-val">'+p.recorder+'</span></div>');
-    if(p.badge)    subCards.push('<div class="oc-sub"><span class="oc-sub-label">Badge</span><span class="oc-sub-val">'+p.badge+'</span></div>');
+    if(p.badge)    subCards.push('<div class="oc-sub"><span class="oc-sub-label">B</span><span class="oc-sub-val">'+p.badge+'</span></div>');
     rhtml+=
       '<div class="officer-card '+cls+'">'+
         '<div class="oc-name-row">'+
@@ -600,10 +599,10 @@ function render(){
   document.getElementById('key-sub').textContent=keysOut+' out \u00b7 '+keysAvail+' avail \u00b7 '+keysOOS+' OOS';
   var khtml='';
   secKeys.filter(function(k){return k.assignedTo&&!k.oos;}).forEach(function(k){
-    khtml+=lrow(ldot('var(--amber)')+'<span class="lf">Key '+k.number+'</span>',sn(k.assignedTo));
+    khtml+=lrow(ldot('var(--amber)')+'<span class="lf">'+k.number+'</span>',sn(k.assignedTo));
   });
   secKeys.filter(function(k){return k.oos;}).forEach(function(k){
-    khtml+=lrow(ldot('var(--red)')+'<span class="lf" style="color:var(--red)">Key '+k.number+'</span>',chip('OOS','#c0392b','rgba(192,57,43,0.15)'));
+    khtml+=lrow(ldot('var(--red)')+'<span class="lf" style="color:var(--red)">'+k.number+'</span>',chip('OOS','#c0392b','rgba(192,57,43,0.15)'));
   });
   document.getElementById('key-list').innerHTML=khtml||noData('None assigned');
 
