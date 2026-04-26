@@ -14,7 +14,7 @@
   }
   html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; }
 
-  /* Header */
+  /* ── Header ── */
   #header {
     position: sticky; top: 0; z-index: 100;
     background: linear-gradient(135deg, #0a1830 0%, #1e3a5f 60%, rgba(201,168,76,0.08) 100%);
@@ -40,10 +40,10 @@
   }
   #refresh-btn:hover { background: rgba(201,168,76,0.22); }
 
-  /* Layout */
+  /* ── Main layout ── */
   #main { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
 
-  /* Info bar */
+  /* ── Info bar ── */
   #info-bar {
     background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 8px;
     padding: 10px 18px; display: grid; grid-template-columns: repeat(5,1fr); gap: 12px;
@@ -51,7 +51,7 @@
   .info-item .label { font-size: 9px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
   .info-item .value { font-size: 13px; font-weight: 700; color: var(--text); margin-top: 3px; }
 
-  /* Metrics */
+  /* ── Metrics ── */
   #metrics { display: grid; grid-template-columns: repeat(8,1fr); gap: 8px; }
   .metric {
     background: var(--card); border: 1px solid var(--border); border-top: 3px solid transparent;
@@ -60,18 +60,18 @@
   .metric .val { font-size: 26px; font-weight: 700; line-height: 1; }
   .metric .lbl { font-size: 9px; color: var(--muted); font-weight: 700; margin-top: 4px; text-transform: uppercase; letter-spacing: .06em; }
 
-  /* Grid layouts */
-  .row-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; }
-  .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-  .row-2-eq { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .col { display: flex; flex-direction: column; gap: 10px; }
+  /* ── Grid row helpers ── */
+  .row-3   { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .row-3-w { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 10px; }
+  .row-2   { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .col     { display: flex; flex-direction: column; gap: 10px; }
 
-  /* Card */
+  /* ── Card ── */
   .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
   .card-title { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; }
   .card-sub { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 6px; }
 
-  /* Roster table */
+  /* ── Roster table ── */
   #roster-table { width: 100%; border-collapse: collapse; }
   #roster-table th {
     text-align: left; padding: 3px 6px; font-size: 9px; font-weight: 700;
@@ -83,54 +83,82 @@
   .name-cell { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
   .sup-tag { font-size: 9px; background: rgba(201,168,76,0.2); color: var(--accent); border-radius: 3px; padding: 1px 4px; font-weight: 700; }
 
-  /* Equipment card grid */
-  .eq-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(82px, 1fr)); gap: 7px; }
+  /* ── Equipment card grid — FIXED width, wraps + scrolls ── */
+  .eq-grid {
+    display: flex; flex-wrap: wrap; gap: 7px;
+    overflow-y: auto; max-height: 280px;
+  }
   .eq-card {
+    width: 88px; flex-shrink: 0;
     border: 2px solid #1e293b; border-radius: 8px; padding: 8px 4px;
     display: flex; flex-direction: column; align-items: center; gap: 3px;
-    text-align: center; background: #151e2d; transition: border-color 0.15s, background 0.15s;
+    text-align: center; background: #151e2d;
   }
-  .eq-card .eq-id   { font-size: 12px; font-weight: 800; color: var(--text); }
-  .eq-card .eq-st   { font-size: 9px;  font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
-  .eq-card .eq-who  { font-size: 9px;  color: var(--subtle); max-width: 76px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  /* Available — green */
+  .eq-card .eq-id  { font-size: 12px; font-weight: 800; color: var(--text); }
+  .eq-card .eq-st  { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+  .eq-card .eq-who { font-size: 9px; color: var(--subtle); width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .eq-card.avail { border-color: #166534; background: rgba(22,101,52,0.18); }
   .eq-card.avail .eq-st { color: var(--green); }
-  /* Out / assigned — amber */
   .eq-card.out   { border-color: #78350f; background: rgba(120,53,15,0.22); }
   .eq-card.out   .eq-st { color: var(--amber); }
-  /* OOS — red, dimmed */
   .eq-card.oos   { border-color: #7f1d1d; background: rgba(127,29,29,0.18); opacity: 0.65; }
   .eq-card.oos   .eq-st { color: var(--red); }
-  /* Permanent assign — blue */
   .eq-card.perm  { border-color: #1e3a5f; background: rgba(30,58,95,0.3); }
   .eq-card.perm  .eq-st { color: var(--blue); }
 
-  /* List rows (keys, flashlights, etc.) */
-  .list-row {
-    display: flex; align-items: center; gap: 6px; padding: 4px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 12px;
+  /* ── Task cards ── */
+  .task-grid { display: flex; flex-direction: column; gap: 7px; overflow-y: auto; max-height: 340px; }
+  .task-card {
+    background: #141e32; border: 1px solid rgba(255,255,255,0.08);
+    border-left: 3px solid var(--accent); border-radius: 8px; padding: 9px 11px;
+    display: flex; flex-direction: column; gap: 3px;
   }
+  .task-card.active-primary {
+    border-left-color: var(--green);
+    background: rgba(22,101,52,0.12);
+  }
+  .task-card .t-name  { font-size: 12px; font-weight: 700; color: var(--text); }
+  .task-card .t-detail { font-size: 11px; color: var(--subtle); line-height: 1.4; }
+  .task-card .t-sign  { font-size: 11px; color: var(--accent); font-weight: 600; }
+  .task-card .t-badge {
+    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+    padding: 2px 6px; border-radius: 3px; width: fit-content;
+  }
+  .task-card .t-badge.active { background: rgba(74,222,128,0.15); color: var(--green); }
+  .task-card .t-badge.pending { background: rgba(251,191,36,0.15); color: var(--amber); }
+
+  /* ── Primary task featured card ── */
+  #primary-task-card {
+    background: rgba(22,101,52,0.10); border: 1px solid rgba(74,222,128,0.2);
+    border-left: 4px solid var(--green); border-radius: 10px; padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  #primary-task-card .pt-label { font-size: 9px; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
+  #primary-task-card .pt-name  { font-size: 15px; font-weight: 800; color: var(--text); }
+  #primary-task-card .pt-detail { font-size: 12px; color: var(--subtle); margin-top: 4px; line-height: 1.5; }
+  #primary-task-card .pt-sign  { font-size: 12px; color: var(--accent); font-weight: 600; margin-top: 4px; }
+
+  /* ── List rows ── */
+  .list-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 12px; }
   .list-row:last-child { border-bottom: none; }
   .list-row .flex1 { flex: 1; }
   .list-row .rv { color: var(--subtle); font-size: 11px; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+  .dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
   .chip { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; white-space: nowrap; }
   .no-data { color: var(--muted); font-size: 12px; padding: 8px 0; }
 
-  /* OOS bar */
+  /* ── OOS bar ── */
   #oos-bar {
     background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.3);
     border-left: 4px solid var(--red); border-radius: 10px; padding: 10px 14px;
   }
   .oos-title { font-size: 10px; font-weight: 700; color: var(--red); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
   #oos-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-
   #last-updated { text-align: center; font-size: 10px; color: var(--muted); padding: 4px 0 8px; }
 
-  @media (max-width: 900px) {
+  @media (max-width: 1000px) {
     #metrics { grid-template-columns: repeat(4,1fr); }
-    .row-2, .row-3, .row-2-eq { grid-template-columns: 1fr; }
+    .row-3, .row-3-w, .row-2 { grid-template-columns: 1fr; }
     #info-bar { grid-template-columns: repeat(2,1fr); }
   }
 </style>
@@ -163,7 +191,7 @@
     <div class="info-item"><div class="label">On Duty</div><div class="value" style="color:var(--green)" id="ib-duty">0</div></div>
   </div>
 
-  <!-- Metric strip -->
+  <!-- Metrics -->
   <div id="metrics">
     <div class="metric" id="m-duty">  <div class="val" style="color:var(--green)">0</div><div class="lbl">On Duty</div></div>
     <div class="metric" id="m-post">  <div class="val" style="color:var(--blue)">0</div><div class="lbl">On Post</div></div>
@@ -175,8 +203,10 @@
     <div class="metric" id="m-toos">  <div class="val" style="color:var(--green)">0</div><div class="lbl">Total OOS</div></div>
   </div>
 
-  <!-- Row 1: Roster + Radios/Keys -->
-  <div class="row-2">
+  <!-- ROW 1: Roster | Primary Tasks | Secondary Tasks -->
+  <div class="row-3-w">
+
+    <!-- Officer Roster -->
     <div class="card">
       <div class="card-title">Officer Roster <span class="card-sub" id="roster-sub"></span></div>
       <table id="roster-table">
@@ -186,47 +216,46 @@
         <tbody id="roster-body"></tbody>
       </table>
     </div>
-    <div class="col">
-      <div class="card">
-        <div class="card-title">Supervisor Radios <span class="card-sub" id="sup-radio-sub"></span></div>
-        <div class="eq-grid" id="sup-radio-grid"></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Officer Radios <span class="card-sub" id="off-radio-sub"></span></div>
-        <div class="eq-grid" id="off-radio-grid"></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Security Keys <span class="card-sub" id="key-sub"></span></div>
-        <div id="key-list"></div>
-      </div>
+
+    <!-- Primary Tasks -->
+    <div class="card">
+      <div class="card-title">&#x25CF; Active Primary Task</div>
+      <div id="primary-task-area"></div>
+    </div>
+
+    <!-- Secondary Tasks -->
+    <div class="card">
+      <div class="card-title">Secondary Tasks <span class="card-sub" id="sec-task-sub"></span></div>
+      <div class="task-grid" id="tasks-list"></div>
+    </div>
+
+  </div>
+
+  <!-- ROW 2: Sup Radios | Officer Radios | Security Keys -->
+  <div class="row-3">
+    <div class="card">
+      <div class="card-title">Supervisor Radios <span class="card-sub" id="sup-radio-sub"></span></div>
+      <div class="eq-grid" id="sup-radio-grid"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Officer Radios <span class="card-sub" id="off-radio-sub"></span></div>
+      <div class="eq-grid" id="off-radio-grid"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Security Keys <span class="card-sub" id="key-sub"></span></div>
+      <div id="key-list"></div>
     </div>
   </div>
 
-  <!-- Row 2: Recorders + Notes + Tasks -->
+  <!-- ROW 3: Recorders | Other Radios | Access & Other Items -->
   <div class="row-3">
     <div class="card">
       <div class="card-title">Recorders <span class="card-sub" id="rec-sub"></span></div>
       <div class="eq-grid" id="rec-grid"></div>
     </div>
     <div class="card">
-      <div class="card-title">Shift Notes</div>
-      <div id="notes-list"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Secondary Tasks</div>
-      <div id="tasks-list"></div>
-    </div>
-  </div>
-
-  <!-- Row 3: Other Radios + Flashlights + Other Items -->
-  <div class="row-3">
-    <div class="card">
       <div class="card-title">Management &amp; Other Radios <span class="card-sub" id="other-radio-sub"></span></div>
       <div class="eq-grid" id="other-radio-grid"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Flashlights</div>
-      <div id="flash-list"></div>
     </div>
     <div class="card">
       <div class="card-title">Access &amp; Other Items</div>
@@ -253,23 +282,19 @@ function sn(n) {
   if (!n) return '\u2014';
   n = n.replace(/^(Dir\.|AD\.|Lt\.|Sgt\.|Ofc\.)\s*/i,'').replace(/\s*\([^)]*\)\s*/g,' ').trim();
   if (n.indexOf(',') >= 0) return n.split(',')[0].trim();
-  var p = n.split(/\s+/);
-  return p.length > 1 ? p[p.length-1] : p[0];
+  var p = n.split(/\s+/); return p.length > 1 ? p[p.length-1] : p[0];
 }
-
 function nowET() {
   try { return new Date().toLocaleString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',hour12:false}); }
   catch(e) { return new Date().toTimeString().slice(0,5); }
 }
-
 function shiftTime(s) {
   return s==='Morning'?'07:00\u201315:00':s==='Evening'?'15:00\u201323:00':s==='Night'?'23:00\u201307:00':s||'\u2014';
 }
-
-function dot(c) { return '<span class="dot" style="background:'+c+'"></span>'; }
-function chip(t,c,b) { return '<span class="chip" style="color:'+c+';background:'+b+'">'+t+'</span>'; }
-function lrow(l,r) { return '<div class="list-row">'+l+'<span class="rv">'+r+'</span></div>'; }
-function noData(m) { return '<div class="no-data">'+(m||'None')+'</div>'; }
+function dot(c)       { return '<span class="dot" style="background:'+c+'"></span>'; }
+function chip(t,c,b)  { return '<span class="chip" style="color:'+c+';background:'+b+'">'+t+'</span>'; }
+function lrow(l,r)    { return '<div class="list-row">'+l+'<span class="rv">'+r+'</span></div>'; }
+function noData(m)    { return '<div class="no-data">'+(m||'None')+'</div>'; }
 
 function eqCard(label, cls, status, who) {
   return '<div class="eq-card '+cls+'">'+
@@ -279,11 +304,19 @@ function eqCard(label, cls, status, who) {
   '</div>';
 }
 
+function taskCard(t, isPrimary) {
+  return '<div class="task-card'+(isPrimary?' active-primary':'')+'">'+
+    (isPrimary ? '<div class="t-badge active">&#x25CF; Active</div>' : '')+
+    '<div class="t-name">'+t.task+'</div>'+
+    (t.detail   ? '<div class="t-detail">'+t.detail+'</div>'   : '')+
+    (t.callSign ? '<div class="t-sign">'+t.callSign+'</div>'   : '')+
+  '</div>';
+}
+
 function setM(id, val, col, warn) {
   var el = document.getElementById(id); if (!el) return;
   var v = el.querySelector('.val');
-  v.textContent = val;
-  if (col) v.style.color = col;
+  v.textContent = val; if (col) v.style.color = col;
   el.style.borderTopColor = warn ? 'var(--red)' : v.style.color;
 }
 
@@ -298,9 +331,9 @@ function render() {
   var offRadios    = ls('fom_officerRadios', []);
   var otherRadios  = ls('fom_otherRadios', []);
   var recorders    = ls('fom_recorders', []);
-  var flashlights  = ls('fom_flashlights', []);
   var notes        = ls('fom_notes', []);
   var tasks        = ls('fom_secondaryTasks', []);
+  var primaryTask  = ls('fom_primaryTask', null);
   var oosState     = ls('fom_oos_state', {});
   var oosIds       = (oosState && oosState.badges) || [];
   var otherKeys    = ls('fom_otherKeys', []);
@@ -324,23 +357,23 @@ function render() {
   var supNames = active.filter(function(p){ return SUP_ROLES.indexOf(p.role)>=0 && p.role!=='OIC'; })
     .map(function(p){ return sn(p.name); }).join(' / ') || '\u2014';
 
-  // Header
+  // ── Header ──
   var dateStr = currentDate ? (function(){
     try { return new Date(currentDate+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}); }
     catch(e) { return currentDate; }
   }()) : 'No date set';
-  document.getElementById('date-sub').textContent = dateStr + ' \u00b7 ' + shift + ' Shift';
+  document.getElementById('date-sub').textContent    = dateStr + ' \u00b7 ' + shift + ' Shift';
   document.getElementById('weather-display').textContent = weather.temp
     ? weather.temp + (weather.conditions ? ' \u00b7 ' + weather.conditions : '') : '';
 
-  // Info bar
+  // ── Info bar ──
   document.getElementById('ib-sup').textContent   = supNames;
   document.getElementById('ib-desk').textContent  = deskOfficer || '\u2014';
   document.getElementById('ib-stime').textContent = shiftTime(shift);
   document.getElementById('ib-shift').textContent = shift || '\u2014';
   document.getElementById('ib-duty').textContent  = active.length;
 
-  // Metrics
+  // ── Metrics ──
   setM('m-duty',   active.length, 'var(--green)',  false);
   setM('m-post',   onPost,        'var(--blue)',   false);
   setM('m-break',  onBreak,       'var(--amber)',  false);
@@ -350,48 +383,77 @@ function render() {
   setM('m-boos',   badgesOOS,     'var(--red)',    badgesOOS > 0);
   setM('m-toos',   totalOOS,      totalOOS > 0 ? 'var(--red)' : 'var(--green)', totalOOS > 0);
 
-  // Roster
+  // ── Roster ──
   document.getElementById('roster-sub').textContent = '(' + active.length + ' active)';
   var rhtml = '';
   active.forEach(function(p) {
     var isSup   = SUP_ROLES.indexOf(p.role) >= 0;
     var isBreak = p.posts && p.posts.some(function(x){ return x.isBreak; });
     var posts   = (p.posts||[]).filter(function(x){ return x.post && !x.isBreak; }).map(function(x){ return x.post; }).join(', ') || '\u2014';
-    rhtml += '<tr><td><div class="name-cell">'+dot(isBreak?'var(--amber)':'var(--green)')+
-      (isSup?'<span class="sup-tag">SUP</span>':'')+
-      '<span style="font-weight:600;font-size:12px;">'+sn(p.name)+'</span></div></td>'+
+    rhtml += '<tr>'+
+      '<td><div class="name-cell">'+dot(isBreak?'var(--amber)':'var(--green)')+
+        (isSup?'<span class="sup-tag">SUP</span>':'')+
+        '<span style="font-weight:600;font-size:12px;">'+sn(p.name)+'</span></div></td>'+
       '<td style="color:var(--subtle);font-size:11px;">'+(isBreak?'\ud83d\udd34 Break':posts)+'</td>'+
       '<td style="color:var(--subtle);font-size:11px;">'+(p.radio||'\u2014')+'</td>'+
       '<td style="color:var(--subtle);font-size:11px;">'+(p.key||'\u2014')+'</td>'+
       '<td style="color:var(--subtle);font-size:11px;">'+(p.recorder||'\u2014')+'</td>'+
-      '<td style="color:var(--subtle);font-size:11px;">'+(p.badge||'\u2014')+'</td></tr>';
+      '<td style="color:var(--subtle);font-size:11px;">'+(p.badge||'\u2014')+'</td>'+
+    '</tr>';
   });
   document.getElementById('roster-body').innerHTML = rhtml ||
     '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:14px;font-size:12px;">No officers on duty</td></tr>';
 
-  // Supervisor Radios — card grid
+  // ── Primary Task ──
+  var ptArea = document.getElementById('primary-task-area');
+  if (primaryTask && primaryTask.task) {
+    ptArea.innerHTML =
+      '<div id="primary-task-card">'+
+        '<div class="pt-label">&#x25CF; Active</div>'+
+        '<div class="pt-name">'+primaryTask.task+'</div>'+
+        (primaryTask.detail   ? '<div class="pt-detail">'+primaryTask.detail+'</div>'   : '')+
+        (primaryTask.callSign ? '<div class="pt-sign">'+primaryTask.callSign+'</div>'   : '')+
+      '</div>';
+  } else if (notes.length) {
+    // Fall back to shift notes if no dedicated primary task
+    ptArea.innerHTML = '<div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-style:italic;">Shift Notes</div>'+
+      notes.map(function(n){
+        return '<div style="display:flex;gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:12px;line-height:1.5">'+
+          '<span style="color:var(--accent);font-weight:700">\u2022</span><span>'+n+'</span></div>';
+      }).join('');
+  } else {
+    ptArea.innerHTML = noData('No active primary task');
+  }
+
+  // ── Secondary Tasks — cards ──
+  document.getElementById('sec-task-sub').textContent = tasks.length ? '('+tasks.length+')' : '';
+  document.getElementById('tasks-list').innerHTML = tasks.length
+    ? tasks.map(function(t){ return taskCard(t, false); }).join('')
+    : noData('No secondary tasks');
+
+  // ── Supervisor Radios ──
   var supOut = supRadios.filter(function(r){ return r.assignedTo && !r.oos; }).length;
   var supAvail = supRadios.filter(function(r){ return !r.assignedTo && !r.oos; }).length;
   var supOOS = supRadios.filter(function(r){ return r.oos; }).length;
   document.getElementById('sup-radio-sub').textContent = supOut+' out \u00b7 '+supAvail+' avail \u00b7 '+supOOS+' OOS';
   document.getElementById('sup-radio-grid').innerHTML = supRadios.length
     ? supRadios.map(function(r){
-        var oos = !!r.oos, out = !!r.assignedTo && !r.oos;
+        var oos=!!r.oos, out=!!r.assignedTo&&!r.oos;
         return eqCard(r.id, oos?'oos':out?'out':'avail', oos?'OOS':out?'Out':'Available', out?sn(r.assignedTo):'');
       }).join('') : noData();
 
-  // Officer Radios — card grid
+  // ── Officer Radios ──
   var offOut = offRadios.filter(function(r){ return r.assignedTo && !r.oos; }).length;
   var offAvail = offRadios.filter(function(r){ return !r.assignedTo && !r.oos; }).length;
   var offOOS = offRadios.filter(function(r){ return r.oos; }).length;
   document.getElementById('off-radio-sub').textContent = offOut+' out \u00b7 '+offAvail+' avail \u00b7 '+offOOS+' OOS';
   document.getElementById('off-radio-grid').innerHTML = offRadios.length
     ? offRadios.map(function(r){
-        var oos = !!r.oos, out = !!r.assignedTo && !r.oos;
+        var oos=!!r.oos, out=!!r.assignedTo&&!r.oos;
         return eqCard(r.id, oos?'oos':out?'out':'avail', oos?'OOS':out?'Out':'Available', out?sn(r.assignedTo):'');
       }).join('') : noData();
 
-  // Security Keys — list
+  // ── Security Keys ──
   document.getElementById('key-sub').textContent = keysOut+' out \u00b7 '+keysAvail+' avail \u00b7 '+keysOOS+' OOS';
   var khtml = '';
   secKeys.filter(function(k){ return k.assignedTo && !k.oos; }).forEach(function(k){
@@ -402,62 +464,33 @@ function render() {
   });
   document.getElementById('key-list').innerHTML = khtml || noData('None assigned');
 
-  // Recorders — card grid
+  // ── Recorders ──
   document.getElementById('rec-sub').textContent = recsOut+' out \u00b7 '+recsOOS+' OOS';
   document.getElementById('rec-grid').innerHTML = recorders.length
     ? recorders.map(function(r){
-        var oos = !!r.oos, out = !!r.assignedTo && !r.oos;
+        var oos=!!r.oos, out=!!r.assignedTo&&!r.oos;
         return eqCard('#'+r.id, oos?'oos':out?'out':'avail', oos?'OOS':out?'Out':'Available', out?sn(r.assignedTo):'');
       }).join('') : noData();
 
-  // Notes
-  document.getElementById('notes-list').innerHTML = notes.length
-    ? notes.map(function(n){
-        return '<div style="display:flex;gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:12px;line-height:1.5">'+
-          '<span style="color:var(--accent);font-weight:700">\u2022</span><span>'+n+'</span></div>';
-      }).join('') : noData('No notes for this shift');
-
-  // Tasks
-  document.getElementById('tasks-list').innerHTML = tasks.length
-    ? tasks.map(function(t){
-        return '<div style="padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06)">'+
-          '<div style="font-size:12px;font-weight:600">'+t.task+'</div>'+
-          (t.detail?'<div style="font-size:11px;color:var(--subtle)">'+t.detail+'</div>':'')+
-          (t.callSign?'<div style="font-size:11px;color:var(--accent)">'+t.callSign+'</div>':'')+
-        '</div>';
-      }).join('') : noData('No secondary tasks');
-
-  // Other Radios — card grid
+  // ── Other Radios ──
   var otherOut = otherRadios.filter(function(r){ return r.assignedTo && !r.oos; }).length;
   document.getElementById('other-radio-sub').textContent = otherOut + ' assigned';
   document.getElementById('other-radio-grid').innerHTML = otherRadios.length
     ? otherRadios.map(function(r){
-        var oos = !!r.oos, out = !!r.assignedTo && !r.oos;
+        var oos=!!r.oos, out=!!r.assignedTo&&!r.oos;
         return eqCard(r.id, oos?'oos':out?'out':'avail', oos?'OOS':out?'Out':'Available', r.assignedTo?sn(r.assignedTo):'');
       }).join('') : noData();
 
-  // Flashlights — list
-  var flhtml = flashlights.map(function(f){
-    var oos = !!f.oos && !f.permanent, perm = !!f.permanent, out = !!f.assignedTo && !f.permanent;
-    var col = oos?'var(--red)':perm?'var(--blue)':out?'var(--amber)':'var(--green)';
-    var right = oos ? chip('OOS','#fff','#7f1d1d')
-      : perm ? '<span style="color:var(--blue)">'+(f.assignedTo||'\u2014')+' (perm)</span>'
-      : out ? '<span style="color:var(--subtle)">'+sn(f.assignedTo)+'</span>'
-      : chip('Avail','#065f46','#d1fae5');
-    return lrow(dot(col)+'<span class="flex1">Flashlight '+f.id+'</span>', right);
-  }).join('');
-  document.getElementById('flash-list').innerHTML = flhtml || noData();
-
-  // Other items
-  var okeys = otherKeys.filter(function(k){ return !k.available && k.assignedTo; }).length;
+  // ── Access & Other Items ──
+  var okeys  = otherKeys.filter(function(k){ return !k.available && k.assignedTo; }).length;
   var obadge = accessBadges.filter(function(a){ return !a.available && !a.oos; }).length;
   var osat   = satPhones.filter(function(s){ return !s.available && !s.oos; }).length;
   document.getElementById('other-items-list').innerHTML =
-    lrow(dot('var(--teal)')+'<span class="flex1">Other keys out</span>', '<span style="font-weight:700;color:var(--teal)">'+okeys+'</span>')+
-    lrow(dot('var(--blue)')+'<span class="flex1">Access badges out</span>', '<span style="font-weight:700;color:var(--blue)">'+obadge+'</span>')+
+    lrow(dot('var(--teal)')+'<span class="flex1">Other keys out</span>',   '<span style="font-weight:700;color:var(--teal)">'+okeys+'</span>')+
+    lrow(dot('var(--blue)')+'<span class="flex1">Access badges out</span>','<span style="font-weight:700;color:var(--blue)">'+obadge+'</span>')+
     lrow(dot('var(--purple)')+'<span class="flex1">Sat phones out</span>', '<span style="font-weight:700;color:var(--purple)">'+osat+'</span>');
 
-  // OOS bar
+  // ── OOS bar ──
   if (totalOOS > 0) {
     document.getElementById('oos-bar').style.display = 'block';
     document.getElementById('oos-title').textContent = '\u26a0 Out of Service \u2014 '+totalOOS+' item'+(totalOOS!==1?'s':'');
@@ -474,11 +507,8 @@ function render() {
   document.getElementById('last-updated').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
 }
 
-// Clock
 setInterval(function(){ document.getElementById('clock').textContent = nowET(); }, 1000);
 document.getElementById('clock').textContent = nowET();
-
-// Render + auto-refresh
 render();
 setInterval(render, 30000);
 window.addEventListener('fom-cloud-updated', render);
