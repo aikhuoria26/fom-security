@@ -126,23 +126,21 @@ html, body {
 }
 .d-card-sub { font-size: 11px; font-weight: 400; color: var(--dim); text-transform: none; letter-spacing: 0; }
 
-/* ── ROSTER TABLE ── */
-#roster-table { width: 100%; border-collapse: collapse; }
-#roster-table th {
-  text-align: left; padding: 3px 6px 7px; font-size: 11px;
-  font-weight: 600; color: var(--subtle); text-transform: uppercase;
-  letter-spacing: .07em;
+/* ── OFFICER CARDS ── */
+#roster-wrap { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.officer-card {
+  border-left: 2px solid var(--muted);
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.015);
+  border-radius: 0 3px 3px 0;
 }
-#roster-table td {
-  padding: 6px 6px; border-top: 1px solid var(--border);
-  font-size: 12px; color: var(--dim);
-}
-#roster-table td.r-name { color: #b0c4d8; font-weight: 500; }
-#roster-table td.r-sup  { color: #b07ad8; font-weight: 500; }
-.r-dot {
-  display: inline-block; width: 6px; height: 6px;
-  border-radius: 50%; margin-right: 4px; vertical-align: middle;
-}
+.officer-card.on-post  { border-left-color: var(--green); }
+.officer-card.on-break { border-left-color: var(--amber); }
+.officer-card.is-sup   { border-left-color: var(--purple); }
+.oc-name  { font-size: 13px; font-weight: 500; color: #b0c4d8; }
+.oc-sup   { font-size: 13px; font-weight: 500; color: #b07ad8; }
+.oc-meta  { font-size: 11px; color: var(--dim); margin-top: 3px; display: flex; flex-wrap: wrap; gap: 8px; }
+.oc-tag   { white-space: nowrap; }
 
 /* ── TASK CARDS ── */
 .task-list { display: flex; flex-direction: column; gap: 4px; }
@@ -277,12 +275,7 @@ html, body {
     <div class="dash-row r-3">
       <div class="d-card">
         <div class="d-card-title">Officer Roster <span class="d-card-sub" id="roster-sub"></span></div>
-        <div id="roster-wrap"><table id="roster-table">
-          <thead><tr>
-            <th></th><th>Officer</th><th>Post</th><th>Radio</th><th>Key</th><th>Rec</th><th>Badge</th>
-          </tr></thead>
-          <tbody id="roster-body"></tbody>
-        </table></div>
+        <div id="roster-wrap"></div>
       </div>
       <div class="d-card">
         <div class="d-card-title">Primary Tasks</div>
@@ -470,26 +463,29 @@ function render(){
   document.getElementById('ib-shift').textContent=shift||'\u2014';
   document.getElementById('ib-duty').textContent =active.length;
 
-  // Roster
+  // Roster — officer cards
   document.getElementById('roster-sub').textContent='('+active.length+' active)';
   var rhtml='';
   active.forEach(function(p){
     var isSup  =SUP_ROLES.indexOf(p.role)>=0;
     var isBreak=p.posts&&p.posts.some(function(x){return x.isBreak;});
-    var posts  =(p.posts||[]).filter(function(x){return x.post&&!x.isBreak;}).map(function(x){return x.post;}).join(', ')||'\u2014';
-    var dotCol =isBreak?'var(--amber)':isSup?'var(--purple)':'var(--green)';
-    rhtml+='<tr>'+
-      '<td><span class="r-dot" style="background:'+dotCol+'"></span></td>'+
-      '<td class="'+(isSup?'r-name r-sup':'r-name')+'">'+sn(p.name)+'</td>'+
-      '<td>'+(isBreak?'Break':posts)+'</td>'+
-      '<td>'+(p.radio||'\u2014')+'</td>'+
-      '<td>'+(p.key||'\u2014')+'</td>'+
-      '<td>'+(p.recorder||'\u2014')+'</td>'+
-      '<td>'+(p.badge||'\u2014')+'</td>'+
-    '</tr>';
+    var posts  =(p.posts||[]).filter(function(x){return x.post&&!x.isBreak;}).map(function(x){return x.post;}).join(', ')||'';
+    var cls    =isBreak?'on-break':isSup?'is-sup':'on-post';
+    var nameCls=isSup?'oc-sup':'oc-name';
+    var meta   =[];
+    if(isBreak) meta.push('<span class="oc-tag" style="color:var(--amber)">On Break</span>');
+    else if(posts) meta.push('<span class="oc-tag">'+posts+'</span>');
+    if(p.role&&!isBreak) meta.push('<span class="oc-tag" style="opacity:.7">'+p.role+'</span>');
+    if(p.radio) meta.push('<span class="oc-tag">R: '+p.radio+'</span>');
+    if(p.key)   meta.push('<span class="oc-tag">K: '+p.key+'</span>');
+    if(p.recorder) meta.push('<span class="oc-tag">Rec: '+p.recorder+'</span>');
+    rhtml+='<div class="officer-card '+cls+'">'+
+      '<div class="'+nameCls+'">'+sn(p.name)+'</div>'+
+      (meta.length?'<div class="oc-meta">'+meta.join('')+'</div>':'')+
+    '</div>';
   });
-  document.getElementById('roster-body').innerHTML=rhtml||
-    '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:14px;font-size:11px;">No officers on duty</td></tr>';
+  document.getElementById('roster-wrap').innerHTML=rhtml||
+    '<div class="no-data">No officers on duty</div>';
 
   // Primary Tasks
   var byPost={};
