@@ -128,20 +128,30 @@ html, body {
 .d-card-sub { font-size: 11px; font-weight: 400; color: var(--dim); text-transform: none; letter-spacing: 0; }
 
 /* ── OFFICER CARDS ── */
-#roster-wrap { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+#roster-wrap { overflow-y: visible; display: flex; flex-direction: column; gap: 5px; }
 .officer-card {
   border-left: 2px solid var(--muted);
-  padding: 6px 10px;
+  padding: 7px 10px;
   background: rgba(255,255,255,0.015);
-  border-radius: 0 3px 3px 0;
+  border-radius: 0 4px 4px 0;
+  display: flex; flex-direction: column; gap: 5px;
 }
 .officer-card.on-post  { border-left-color: var(--green); }
 .officer-card.on-break { border-left-color: var(--amber); }
 .officer-card.is-sup   { border-left-color: var(--purple); }
-.oc-name  { font-size: 13px; font-weight: 500; color: #b0c4d8; }
-.oc-sup   { font-size: 13px; font-weight: 500; color: #b07ad8; }
-.oc-meta  { font-size: 11px; color: var(--dim); margin-top: 3px; display: flex; flex-wrap: wrap; gap: 8px; }
-.oc-tag   { white-space: nowrap; }
+.oc-name-row { display: flex; align-items: baseline; gap: 6px; }
+.oc-rank  { font-size: 10px; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: .05em; }
+.oc-name  { font-size: 13px; font-weight: 600; color: #b0c4d8; }
+.oc-name.sup { color: #b07ad8; }
+.oc-cards { display: flex; gap: 5px; flex-wrap: wrap; }
+.oc-sub {
+  background: rgba(0,0,0,0.25); border: 1px solid var(--border2);
+  border-radius: 4px; padding: 4px 8px; display: flex; flex-direction: column; gap: 2px;
+}
+.oc-sub-label { font-size: 9px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
+.oc-sub-val   { font-size: 11px; color: var(--dim); }
+.oc-sub-val.break { color: var(--amber); }
+.oc-sub-val.post  { color: #94b8d8; }
 
 /* ── TASK CARDS ── */
 .task-list { display: flex; flex-direction: column; gap: 4px; }
@@ -476,26 +486,52 @@ function render(){
   document.getElementById('ib-shift').textContent=shift||'\u2014';
   document.getElementById('ib-duty').textContent =active.length;
 
-  // Roster — officer cards
+  // Roster — officer cards with sub-cards
+  var RANK_MAP = {
+    'Director of Security':'Director','Assistant Director':'AD','Director':'Director',
+    'Lieutenant':'Lt','Dir/AD/Lt':'Lt','Sergeant':'Sgt','OIC':'OIC','Developer':'Dev','Officer':'Ofc'
+  };
   document.getElementById('roster-sub').textContent='('+active.length+' active)';
   var rhtml='';
   active.forEach(function(p){
-    var isSup  =SUP_ROLES.indexOf(p.role)>=0;
-    var isBreak=p.posts&&p.posts.some(function(x){return x.isBreak;});
-    var posts  =(p.posts||[]).filter(function(x){return x.post&&!x.isBreak;}).map(function(x){return x.post;}).join(', ')||'';
-    var cls    =isBreak?'on-break':isSup?'is-sup':'on-post';
-    var nameCls=isSup?'oc-sup':'oc-name';
-    var meta   =[];
-    if(isBreak) meta.push('<span class="oc-tag" style="color:var(--amber)">On Break</span>');
-    else if(posts) meta.push('<span class="oc-tag">'+posts+'</span>');
-    if(p.role&&!isBreak) meta.push('<span class="oc-tag" style="opacity:.7">'+p.role+'</span>');
-    if(p.radio) meta.push('<span class="oc-tag">R: '+p.radio+'</span>');
-    if(p.key)   meta.push('<span class="oc-tag">K: '+p.key+'</span>');
-    if(p.recorder) meta.push('<span class="oc-tag">Rec: '+p.recorder+'</span>');
-    rhtml+='<div class="officer-card '+cls+'">'+
-      '<div class="'+nameCls+'">'+sn(p.name)+'</div>'+
-      (meta.length?'<div class="oc-meta">'+meta.join('')+'</div>':'')+
-    '</div>';
+    var isSup   = SUP_ROLES.indexOf(p.role)>=0;
+    var isBreak = p.posts&&p.posts.some(function(x){return x.isBreak;});
+    var posts   = (p.posts||[]).filter(function(x){return x.post&&!x.isBreak;});
+    var cls     = isBreak?'on-break':isSup?'is-sup':'on-post';
+    var rank    = RANK_MAP[p.role]||p.role||'';
+    var nameCls = isSup?'oc-name sup':'oc-name';
+
+    // Posts sub-card
+    var postContent = isBreak
+      ? '<div class="oc-sub-val break">On Break</div>'
+      : posts.length
+        ? posts.map(function(pp){
+            var t = pp.post+(pp.from&&pp.to?' ('+pp.from+'–'+pp.to+')':'');
+            return '<div class="oc-sub-val post">'+t+'</div>';
+          }).join('')
+        : '<div class="oc-sub-val" style="opacity:.5">No post</div>';
+
+    // Equipment sub-card — only show assigned items
+    var equip = [];
+    if(p.radio)    equip.push('R: '+p.radio);
+    if(p.key)      equip.push('K: '+p.key);
+    if(p.recorder) equip.push('Rec: '+p.recorder);
+    if(p.badge)    equip.push('B: '+p.badge);
+    var equipContent = equip.length
+      ? equip.map(function(e){return '<div class="oc-sub-val">'+e+'</div>';}).join('')
+      : '<div class="oc-sub-val" style="opacity:.5">None</div>';
+
+    rhtml+=
+      '<div class="officer-card '+cls+'">'+
+        '<div class="oc-name-row">'+
+          (rank?'<span class="oc-rank">'+rank+'</span>':'')+
+          '<span class="'+nameCls+'">'+sn(p.name)+'</span>'+
+        '</div>'+
+        '<div class="oc-cards">'+
+          '<div class="oc-sub"><div class="oc-sub-label">Post</div>'+postContent+'</div>'+
+          '<div class="oc-sub"><div class="oc-sub-label">Equipment</div>'+equipContent+'</div>'+
+        '</div>'+
+      '</div>';
   });
   document.getElementById('roster-wrap').innerHTML=rhtml||
     '<div class="no-data">No officers on duty</div>';
