@@ -1364,6 +1364,15 @@ var FOM_REGISTRATION_URL = '/';
   function syncPersonnelToPosting(){
     // Never overwrite a posting that was manually opened/edited by the user
     if(window._postingManuallyEdited) return;
+
+    // If the posting was manually saved more recently than the last personnel
+    // change, it means the user has customised it — don't overwrite their work.
+    try{
+      var postingLmt  = parseInt(localStorage.getItem('fom_posting_lmt')||'0',10);
+      var personnelLmt = parseInt(localStorage.getItem('fom_personnel_lmt')||'0',10);
+      if(postingLmt > 0 && personnelLmt > 0 && postingLmt >= personnelLmt) return;
+    }catch(e){}
+
     try {
       var personnelRaw = localStorage.getItem('fom_personnel');
       if(!personnelRaw) return;
@@ -3222,7 +3231,8 @@ var FOM_REGISTRATION_URL = '/';
     var keys=['fom_personnel','fom_deskOfficer','fom_supervisors','fom_secondaryTasks',
       'fom_securityKeys','fom_officerRadios','fom_supervisorRadios','fom_otherRadios',
       'fom_recorders','fom_flashlights','fom_oos_state','fom_na_log',
-      'fom_daily_posting','fom_security_summary','fom_notes','fom_last_posting_merge'];
+      'fom_daily_posting','fom_security_summary','fom_notes','fom_last_posting_merge',
+      'fom_posting_lmt','fom_personnel_lmt'];
     for(var i=0;i<keys.length;i++){
       try{localStorage.removeItem(keys[i])}catch(e){}
     }
@@ -3248,6 +3258,9 @@ var FOM_REGISTRATION_URL = '/';
     _boundSetItem(k,v);
     if(k==='fom_personnel'||k==='fom_security_summary'){
       try{_boundSetItem('fom_shift_marker',getCurrentShift())}catch(e){}
+    }
+    if(k==='fom_personnel'){
+      try{_boundSetItem('fom_personnel_lmt',String(Date.now()));}catch(e){}
     }
     // Mark dirty when React saves any fom_ key
     if(k.indexOf('fom_')===0 && typeof window._fomMarkDirty==='function'){
