@@ -419,34 +419,34 @@ function render() {
     });
   });
 
-  var ptHTML = PRIMARY_POSTS.map(function(postName) {
-    var officers = byPost[postName];
-    var col = POST_COLORS[postName];
-    var icon = POST_ICONS[postName];
-    var hasOfficers = officers.length > 0;
-    return '<div style="border:1px solid rgba(255,255,255,0.08);border-left:3px solid '+(hasOfficers?col:'var(--muted)')+';border-radius:8px;padding:9px 11px;margin-bottom:7px;background:'+(hasOfficers?'rgba(0,0,0,0.2)':'rgba(0,0,0,0.1)')+';">'+
-      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:'+(hasOfficers?'6px':'0')+';">'+
-        '<span style="font-size:14px;">'+icon+'</span>'+
-        '<span style="font-size:11px;font-weight:700;color:'+(hasOfficers?col:'var(--muted)')+';text-transform:uppercase;letter-spacing:.05em;">'+postName+'</span>'+
-        '<span style="font-size:10px;color:var(--muted);margin-left:auto;">'+officers.length+'</span>'+
-      '</div>'+
-      (hasOfficers
-        ? officers.map(function(name){
+  var activePosts = PRIMARY_POSTS.filter(function(p){ return byPost[p].length > 0; });
+  var ptHTML = activePosts.length
+    ? activePosts.map(function(postName) {
+        var officers = byPost[postName];
+        var col = POST_COLORS[postName];
+        var icon = POST_ICONS[postName];
+        return '<div style="border:1px solid rgba(255,255,255,0.08);border-left:3px solid '+col+';border-radius:8px;padding:9px 11px;margin-bottom:7px;background:rgba(0,0,0,0.2);">'+
+          '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">'+
+            '<span style="font-size:14px;">'+icon+'</span>'+
+            '<span style="font-size:11px;font-weight:700;color:'+col+';text-transform:uppercase;letter-spacing:.05em;">'+postName+'</span>'+
+            '<span style="font-size:10px;color:var(--muted);margin-left:auto;">'+officers.length+'</span>'+
+          '</div>'+
+          officers.map(function(name){
             return '<div style="font-size:12px;font-weight:600;color:var(--text);padding:2px 0;display:flex;align-items:center;gap:5px;">'+
               '<span style="width:6px;height:6px;border-radius:50%;background:'+col+';display:inline-block;flex-shrink:0;"></span>'+name+'</div>';
-          }).join('')
-        : '<div style="font-size:11px;color:var(--muted);font-style:italic;">Unassigned</div>'
-      )+
-    '</div>';
-  }).join('');
+          }).join('')+
+        '</div>';
+      }).join('')
+    : '<div class="no-data">No active assignments</div>';
 
   document.getElementById('primary-task-area').innerHTML = ptHTML;
 
-  // ── Secondary Tasks — cards ──
-  document.getElementById('sec-task-sub').textContent = tasks.length ? '('+tasks.length+')' : '';
-  document.getElementById('tasks-list').innerHTML = tasks.length
-    ? tasks.map(function(t){ return taskCard(t, false); }).join('')
-    : noData('No secondary tasks');
+  // ── Secondary Tasks — only show tasks with an assigned officer ──
+  var activeTasks = tasks.filter(function(t){ return t.callSign && t.callSign.trim(); });
+  document.getElementById('sec-task-sub').textContent = activeTasks.length ? '('+activeTasks.length+')' : '';
+  document.getElementById('tasks-list').innerHTML = activeTasks.length
+    ? activeTasks.map(function(t){ return taskCard(t, false); }).join('')
+    : '<div class="no-data">No active tasks</div>';
 
   // ── Supervisor Radios ──
   var supOut = supRadios.filter(function(r){ return r.assignedTo && !r.oos; }).length;
