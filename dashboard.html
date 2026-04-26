@@ -471,12 +471,25 @@ function render() {
 
   document.getElementById('primary-task-area').innerHTML = ptHTML;
 
-  // ── Secondary Tasks — only show tasks active right now based on time field ──
+  // ── Secondary Tasks — show only tasks whose time falls within current shift ──
+  var shiftBounds = shift==='Morning' ? {from:'07:00',to:'15:00'}
+                  : shift==='Evening' ? {from:'15:00',to:'23:00'}
+                  : shift==='Night'   ? {from:'23:00',to:'07:00'}
+                  : {from:null,to:null};
+
+  function taskInShift(timeStr) {
+    if (!timeStr || !timeStr.trim()) return true; // no time — always show
+    if (!shiftBounds.from) return true;           // unknown shift — always show
+    var tm = parseMins(timeStr);
+    if (tm === null) return true;
+    var sf = parseMins(shiftBounds.from), st = parseMins(shiftBounds.to);
+    if (st <= sf) st += 1440;          // overnight wrap (Night shift)
+    var tm2 = tm < sf ? tm + 1440 : tm; // align to same window
+    return tm2 >= sf && tm2 < st;
+  }
+
   var activeTasks = tasks.filter(function(t) {
-    if (!t.callSign || !t.callSign.trim()) return false;
-    if (!t.time || !t.time.trim()) return true; // no time = always active
-    var range = parseTimeRange(t.time);
-    return isActive(range.from, range.to);
+    return (t.callSign && t.callSign.trim()) && taskInShift(t.time);
   });
   document.getElementById('sec-task-sub').textContent = activeTasks.length ? '('+activeTasks.length+')' : '';
   document.getElementById('tasks-list').innerHTML = activeTasks.length
