@@ -402,8 +402,12 @@ function taskCard(t){
   var detail=stripTime(t.detail);
   return'<div class="task-item">'+
     '<div class="task-name">'+t.task+'</div>'+
-    (detail?'<div class="task-who">'+detail+'</div>':'')+
-    (t.callSign?'<div class="task-who">'+t.callSign+'</div>':'')+
+    '<div class="oc-cards">'+
+      '<div class="oc-sub">'+
+        (detail?'<span class="oc-sub-val" style="color:var(--dim)">'+detail+'</span>':'')+
+        (t.callSign?'<span class="oc-sub-val" style="color:#94b8d8">'+t.callSign+'</span>':'')+
+      '</div>'+
+    '</div>'+
   '</div>';
 }
 function lrow(l,r){
@@ -540,9 +544,12 @@ function render(){
   document.getElementById('primary-task-area').innerHTML=activePosts.length
     ?'<div class="task-list">'+activePosts.map(function(pn){
         var col=POST_COLORS[pn];
+        var names=byPost[pn];
         return'<div class="task-item active" style="border-left-color:'+col+';background:rgba(0,0,0,0.2)">'+
           '<div class="task-name" style="color:var(--text)">'+pn+'</div>'+
-          '<div class="task-who">'+byPost[pn].join(', ')+'</div>'+
+          '<div class="oc-cards">'+names.map(function(n){
+            return'<div class="oc-sub"><span class="oc-sub-val">'+n+'</span></div>';
+          }).join('')+'</div>'+
         '</div>';
       }).join('')+'</div>'
     :'<div class="no-data">No active assignments</div>';
