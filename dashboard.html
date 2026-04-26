@@ -219,7 +219,7 @@
 
     <!-- Primary Tasks -->
     <div class="card">
-      <div class="card-title">&#x25CF; Active Primary Task</div>
+      <div class="card-title">&#x25CF; Primary Tasks</div>
       <div id="primary-task-area"></div>
     </div>
 
@@ -333,7 +333,7 @@ function render() {
   var recorders    = ls('fom_recorders', []);
   var notes        = ls('fom_notes', []);
   var tasks        = ls('fom_secondaryTasks', []);
-  var primaryTask  = ls('fom_primaryTask', null);
+  var primaryTask  = ls('fom_primaryTask', null); // reserved for future use
   var oosState     = ls('fom_oos_state', {});
   var oosIds       = (oosState && oosState.badges) || [];
   var otherKeys    = ls('fom_otherKeys', []);
@@ -404,26 +404,43 @@ function render() {
   document.getElementById('roster-body').innerHTML = rhtml ||
     '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:14px;font-size:12px;">No officers on duty</td></tr>';
 
-  // ── Primary Task ──
-  var ptArea = document.getElementById('primary-task-area');
-  if (primaryTask && primaryTask.task) {
-    ptArea.innerHTML =
-      '<div id="primary-task-card">'+
-        '<div class="pt-label">&#x25CF; Active</div>'+
-        '<div class="pt-name">'+primaryTask.task+'</div>'+
-        (primaryTask.detail   ? '<div class="pt-detail">'+primaryTask.detail+'</div>'   : '')+
-        (primaryTask.callSign ? '<div class="pt-sign">'+primaryTask.callSign+'</div>'   : '')+
-      '</div>';
-  } else if (notes.length) {
-    // Fall back to shift notes if no dedicated primary task
-    ptArea.innerHTML = '<div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-style:italic;">Shift Notes</div>'+
-      notes.map(function(n){
-        return '<div style="display:flex;gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:12px;line-height:1.5">'+
-          '<span style="color:var(--accent);font-weight:700">\u2022</span><span>'+n+'</span></div>';
-      }).join('');
-  } else {
-    ptArea.innerHTML = noData('No active primary task');
-  }
+  // ── Primary Tasks — derived from personnel post assignments ──
+  var PRIMARY_POSTS = ['Mall', 'Vehicle', 'Desk', 'Special'];
+  var POST_COLORS = { Mall: 'var(--blue)', Vehicle: 'var(--amber)', Desk: 'var(--green)', Special: 'var(--purple)' };
+  var POST_ICONS  = { Mall: '\uD83C\uDFEC', Vehicle: '\uD83D\uDE97', Desk: '\uD83D\uDCCB', Special: '\u2605' };
+
+  var byPost = {};
+  PRIMARY_POSTS.forEach(function(p){ byPost[p] = []; });
+  active.forEach(function(p) {
+    (p.posts||[]).forEach(function(pp) {
+      if (pp.post && !pp.isBreak && byPost[pp.post] !== undefined) {
+        byPost[pp.post].push(sn(p.name));
+      }
+    });
+  });
+
+  var ptHTML = PRIMARY_POSTS.map(function(postName) {
+    var officers = byPost[postName];
+    var col = POST_COLORS[postName];
+    var icon = POST_ICONS[postName];
+    var hasOfficers = officers.length > 0;
+    return '<div style="border:1px solid rgba(255,255,255,0.08);border-left:3px solid '+(hasOfficers?col:'var(--muted)')+';border-radius:8px;padding:9px 11px;margin-bottom:7px;background:'+(hasOfficers?'rgba(0,0,0,0.2)':'rgba(0,0,0,0.1)')+';">'+
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:'+(hasOfficers?'6px':'0')+';">'+
+        '<span style="font-size:14px;">'+icon+'</span>'+
+        '<span style="font-size:11px;font-weight:700;color:'+(hasOfficers?col:'var(--muted)')+';text-transform:uppercase;letter-spacing:.05em;">'+postName+'</span>'+
+        '<span style="font-size:10px;color:var(--muted);margin-left:auto;">'+officers.length+'</span>'+
+      '</div>'+
+      (hasOfficers
+        ? officers.map(function(name){
+            return '<div style="font-size:12px;font-weight:600;color:var(--text);padding:2px 0;display:flex;align-items:center;gap:5px;">'+
+              '<span style="width:6px;height:6px;border-radius:50%;background:'+col+';display:inline-block;flex-shrink:0;"></span>'+name+'</div>';
+          }).join('')
+        : '<div style="font-size:11px;color:var(--muted);font-style:italic;">Unassigned</div>'
+      )+
+    '</div>';
+  }).join('');
+
+  document.getElementById('primary-task-area').innerHTML = ptHTML;
 
   // ── Secondary Tasks — cards ──
   document.getElementById('sec-task-sub').textContent = tasks.length ? '('+tasks.length+')' : '';
