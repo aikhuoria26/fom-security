@@ -31,20 +31,20 @@ html, body {
 
 /* ── TOPBAR ── */
 #topbar {
-  height: 38px; background: var(--panel);
+  height: 48px; background: var(--panel);
   border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; padding: 0 16px; gap: 16px;
+  display: flex; align-items: center; padding: 0 20px; gap: 18px;
   flex-shrink: 0; position: sticky; top: 0; z-index: 50;
 }
 #topbar .logo {
-  font-size: 11px; font-weight: 600; color: var(--text);
+  font-size: 14px; font-weight: 700; color: var(--text);
   letter-spacing: .12em; text-transform: uppercase;
 }
 #topbar .logo span { color: var(--accent); }
-.tb-div { width: 1px; height: 14px; background: var(--border2); }
-.tb-item { font-size: 10px; color: var(--subtle); white-space: nowrap; }
-.tb-item b { color: #94a3b8; font-weight: 500; }
-#tb-clock { margin-left: auto; font-size: 14px; font-weight: 500; color: var(--accent); letter-spacing: .06em; }
+.tb-div { width: 1px; height: 18px; background: var(--border2); }
+.tb-item { font-size: 12px; color: var(--subtle); white-space: nowrap; }
+.tb-item b { color: #b0c4d8; font-weight: 600; }
+#tb-clock { margin-left: auto; font-size: 17px; font-weight: 600; color: var(--accent); letter-spacing: .06em; }
 #tb-back {
   font-size: 10px; font-weight: 500; color: var(--subtle);
   text-decoration: none; padding: 3px 10px;
@@ -68,16 +68,16 @@ html, body {
   border-bottom: 1px solid var(--border);
 }
 .stat-cell {
-  padding: 8px 12px; border-right: 1px solid var(--border);
-  display: flex; flex-direction: column; gap: 2px;
+  padding: 11px 14px; border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 4px;
 }
 .stat-cell:last-child { border-right: none; }
 .stat-label {
-  font-size: 10px; font-weight: 600; color: var(--subtle);
-  text-transform: uppercase; letter-spacing: .08em;
+  font-size: 11px; font-weight: 600; color: var(--subtle);
+  text-transform: uppercase; letter-spacing: .07em;
 }
 .stat-val {
-  font-size: 22px; font-weight: 500; color: var(--text);
+  font-size: 26px; font-weight: 500; color: var(--text);
   line-height: 1;
 }
 .stat-val.alert  { color: var(--red); }
