@@ -158,7 +158,6 @@ html, body {
 /* ── EQUIPMENT GRID ── */
 .eq-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
   gap: 5px;
   overflow-y: auto; max-height: 220px;
 }
@@ -568,21 +567,30 @@ function render(){
     return eqCard(r.id, cls, status, who);
   }
 
+  function renderEqGrid(id, cards) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (!cards.length) { el.innerHTML = noData(); el.style.gridTemplateColumns = ''; return; }
+    var n = cards.length;
+    // If it would naturally spill to 2 rows, force exactly 2 even rows
+    var cols = n <= 6 ? n : Math.ceil(n / 2);
+    el.style.gridTemplateColumns = 'repeat('+cols+', 1fr)';
+    el.innerHTML = cards.join('');
+  }
+
   // ── Sup Radios ──
   var supOut=allSupRadios.filter(function(r){return r.assignedTo&&!r.oos&&isOnDuty(r.assignedTo);}).length;
   var supAvail=allSupRadios.filter(function(r){return(!r.assignedTo||!isOnDuty(r.assignedTo))&&!r.oos;}).length;
   var supOOS=allSupRadios.filter(function(r){return r.oos;}).length;
   document.getElementById('sup-radio-sub').textContent=supOut+' out \u00b7 '+supAvail+' avail \u00b7 '+supOOS+' OOS';
-  document.getElementById('sup-radio-grid').innerHTML=allSupRadios.length
-    ?allSupRadios.map(radioCard).join(''):noData();
+  renderEqGrid('sup-radio-grid', allSupRadios.map(radioCard));
 
   // ── Officer Radios ──
   var offOut=offRadios.filter(function(r){return r.assignedTo&&!r.oos&&isOnDuty(r.assignedTo);}).length;
   var offAvail=offRadios.filter(function(r){return(!r.assignedTo||!isOnDuty(r.assignedTo))&&!r.oos;}).length;
   var offOOS=offRadios.filter(function(r){return r.oos;}).length;
   document.getElementById('off-radio-sub').textContent=offOut+' out \u00b7 '+offAvail+' avail \u00b7 '+offOOS+' OOS';
-  document.getElementById('off-radio-grid').innerHTML=offRadios.length
-    ?offRadios.map(radioCard).join(''):noData();
+  renderEqGrid('off-radio-grid', offRadios.map(radioCard));
 
   // ── Keys ──
   document.getElementById('key-sub').textContent=keysOut+' out \u00b7 '+keysAvail+' avail \u00b7 '+keysOOS+' OOS';
@@ -597,17 +605,15 @@ function render(){
 
   // ── Recorders ──
   document.getElementById('rec-sub').textContent=recsOut+' out \u00b7 '+recsOOS+' OOS';
-  document.getElementById('rec-grid').innerHTML=recorders.length
-    ?recorders.map(function(r){
-        var oos=!!r.oos,out=!!r.assignedTo&&!r.oos;
-        return eqCard('#'+r.id,oos?'oos':out?'out':'avail',oos?'OOS':out?'Out':'Avail',out?sn(r.assignedTo):'');
-      }).join(''):noData();
+  renderEqGrid('rec-grid', recorders.map(function(r){
+    var oos=!!r.oos,out=!!r.assignedTo&&!r.oos;
+    return eqCard('#'+r.id,oos?'oos':out?'out':'avail',oos?'OOS':out?'Out':'Avail',out?sn(r.assignedTo):'');
+  }));
 
   // ── Other Radios (95/97/99 moved to supervisor) ──
   var otherOut=remainingOtherRadios.filter(function(r){return r.assignedTo&&!r.oos&&isOnDuty(r.assignedTo);}).length;
   document.getElementById('other-radio-sub').textContent=otherOut+' assigned';
-  document.getElementById('other-radio-grid').innerHTML=remainingOtherRadios.length
-    ?remainingOtherRadios.map(radioCard).join(''):noData();
+  renderEqGrid('other-radio-grid', remainingOtherRadios.map(radioCard));
 
   // ── Access & Other ──
   var okeys  = otherKeys.filter(function(k){return!k.available&&k.assignedTo;}).length;
