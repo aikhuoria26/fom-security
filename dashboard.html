@@ -196,19 +196,10 @@ html, body {
 .no-data { font-size: 12px; color: var(--dim); padding: 8px 0; }
 
 /* ── ROW 1: roster drives height, tasks scroll internally ── */
-.r-3 { align-items: stretch; } /* all cells same height as tallest */
-.r-3 .d-card {
-  display: flex; flex-direction: column;
-}
-/* Roster: no height cap, grows with each officer entry */
-#roster-wrap { flex: unset; overflow-y: visible; }
-/* Task cards: constrained to the grid-cell height set by the roster, scroll inside */
-.r-3 .d-card:nth-child(2),
-.r-3 .d-card:nth-child(3) {
-  overflow: hidden;
-}
-#primary-task-area { overflow-y: auto; flex: 1; min-height: 0; }
-.task-list#tasks-list { overflow-y: auto; flex: 1; min-height: 0; }
+.r-3 .d-card { display: flex; flex-direction: column; }
+#roster-wrap { overflow-y: visible; }
+#primary-task-area { overflow-y: auto; }
+.task-list#tasks-list { overflow-y: auto; }
 
 /* ── OOS BAR ── */
 #oos-bar {
@@ -622,12 +613,42 @@ function render(){
   document.getElementById('last-updated').textContent='Updated '+new Date().toLocaleTimeString();
 }
 
+// Match task card heights to roster height
+function syncRow1Heights() {
+  var rosterCard = document.querySelector('.r-3 .d-card:nth-child(1)');
+  var primaryCard = document.querySelector('.r-3 .d-card:nth-child(2)');
+  var secondaryCard = document.querySelector('.r-3 .d-card:nth-child(3)');
+  if (!rosterCard || !primaryCard || !secondaryCard) return;
+
+  // Reset first so roster can size naturally
+  primaryCard.style.height = '';
+  secondaryCard.style.height = '';
+  document.getElementById('primary-task-area').style.maxHeight = '';
+  document.getElementById('tasks-list').style.maxHeight = '';
+
+  // Measure roster natural height
+  var h = rosterCard.offsetHeight;
+  if (!h) return;
+
+  // Lock task cards to same height and let their content areas scroll
+  primaryCard.style.height = h + 'px';
+  secondaryCard.style.height = h + 'px';
+
+  // Content area height = card height minus title bar
+  var titleH = primaryCard.querySelector('.d-card-title').offsetHeight || 36;
+  var innerH = h - titleH - 20; // 20px for padding
+  document.getElementById('primary-task-area').style.maxHeight = innerH + 'px';
+  document.getElementById('tasks-list').style.maxHeight = innerH + 'px';
+}
+
 setInterval(function(){document.getElementById('tb-clock').textContent=nowET();},1000);
 document.getElementById('tb-clock').textContent=nowET();
 render();
-setInterval(render,30000);
-window.addEventListener('fom-cloud-updated',render);
-window.addEventListener('storage',function(e){if(e.key&&e.key.indexOf('fom_')===0)render();});
+setTimeout(syncRow1Heights, 50);
+setInterval(function(){ render(); setTimeout(syncRow1Heights, 50); }, 30000);
+window.addEventListener('fom-cloud-updated', function(){ render(); setTimeout(syncRow1Heights,50); });
+window.addEventListener('storage',function(e){ if(e.key&&e.key.indexOf('fom_')===0){ render(); setTimeout(syncRow1Heights,50); } });
+window.addEventListener('resize', syncRow1Heights);
 </script>
 </body>
 </html>
