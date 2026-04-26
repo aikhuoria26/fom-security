@@ -44,14 +44,15 @@ html, body {
 .tb-div { width: 1px; height: 18px; background: var(--border2); }
 .tb-item { font-size: 12px; color: var(--subtle); white-space: nowrap; }
 .tb-item b { color: #b0c4d8; font-weight: 600; }
-#tb-clock { margin-left: auto; font-size: 17px; font-weight: 600; color: var(--accent); letter-spacing: .06em; }
+#tb-clock { font-size: 17px; font-weight: 600; color: var(--accent); letter-spacing: .06em; }
+.tb-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
 #tb-back {
   font-size: 10px; font-weight: 500; color: var(--subtle);
   text-decoration: none; padding: 3px 10px;
   border: 1px solid var(--border2); border-radius: 4px;
-  transition: color .15s, border-color .15s;
+  transition: color .15s;
 }
-#tb-back:hover { color: var(--text); border-color: var(--border2); }
+#tb-back:hover { color: var(--text); }
 #tb-refresh {
   font-size: 10px; font-weight: 500; color: var(--accent);
   background: none; border: 1px solid rgba(184,134,42,0.25);
@@ -236,14 +237,15 @@ html, body {
   <div class="tb-div"></div>
   <div class="tb-item" id="tb-shift">Shift <b>&mdash;</b></div>
   <div class="tb-div"></div>
-  <div class="tb-item" id="tb-oic">OIC <b>&mdash;</b></div>
-  <div class="tb-div"></div>
-  <div class="tb-item" id="tb-desk">Desk <b>&mdash;</b></div>
+  <div class="tb-item" id="tb-date"></div>
   <div class="tb-div"></div>
   <div class="tb-item" id="tb-weather"></div>
-  <button id="tb-refresh" onclick="render()">&#x21BA; Refresh</button>
-  <a href="desktop.html" id="tb-back">&#x2190; Back to FOM</a>
-  <div id="tb-clock">--:--</div>
+  <div class="tb-right">
+    <div id="tb-clock">--:--</div>
+    <div class="tb-div"></div>
+    <button id="tb-refresh" onclick="render()">&#x21BA; Refresh</button>
+    <a href="desktop.html" id="tb-back">&#x2190; Back to FOM</a>
+  </div>
 </div>
 
 <div id="main">
@@ -443,10 +445,9 @@ function render(){
     try{return new Date(currentDate+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});}
     catch(e){return currentDate;}
   }()):'';;
-  document.getElementById('tb-shift').innerHTML='Shift <b>'+(shift||'\u2014')+(dateStr?' \u00b7 '+dateStr:'')+'</b>';
-  document.getElementById('tb-oic').innerHTML='OIC <b>'+supNames+'</b>';
-  document.getElementById('tb-desk').innerHTML='Desk <b>'+(deskOfficer||'\u2014')+'</b>';
-  document.getElementById('tb-weather').textContent=weather.temp?(weather.temp+(weather.conditions?' \u00b7 '+weather.conditions:'')):'';;
+  document.getElementById('tb-shift').innerHTML='Shift <b>'+(shift||'—')+'</b>';
+  document.getElementById('tb-date').textContent = dateStr || '';
+  document.getElementById('tb-weather').textContent=weather.temp?(weather.temp+(weather.conditions?' · '+weather.conditions:'')):'';;
 
   setM('m-duty',  active.length, active.length>0?'ok':'');
   setM('m-post',  onPost,'');
