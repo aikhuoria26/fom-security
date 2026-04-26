@@ -291,6 +291,34 @@ function nowET() {
 function shiftTime(s) {
   return s==='Morning'?'07:00\u201315:00':s==='Evening'?'15:00\u201323:00':s==='Night'?'23:00\u201307:00':s||'\u2014';
 }
+function nowMins() {
+  try {
+    var s = new Date().toLocaleString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',hour12:false});
+    var p = s.split(':'); return parseInt(p[0])*60 + parseInt(p[1]);
+  } catch(e) { var d=new Date(); return d.getHours()*60+d.getMinutes(); }
+}
+function parseMins(t) {
+  if (!t) return null;
+  t = t.trim();
+  if (/^\d{4}$/.test(t)) return parseInt(t.slice(0,2))*60 + parseInt(t.slice(2));
+  if (/^\d{1,2}:\d{2}$/.test(t)) { var p=t.split(':'); return parseInt(p[0])*60+parseInt(p[1]); }
+  return null;
+}
+function isActive(from, to) {
+  if (!from && !to) return true; // no time set — always show
+  var now=nowMins(), f=parseMins(from), t=parseMins(to);
+  if (f===null || t===null) return true;
+  if (t <= f) t += 1440; // overnight wrap
+  var n = now < f ? now + 1440 : now; // adjust for overnight
+  return n >= f && n < t;
+}
+function parseTimeRange(str) {
+  // handles "1500-1700", "15:00-17:00", "15:00 - 17:00"
+  if (!str) return {from:null, to:null};
+  var m = str.replace(/[\u2013\u2014]/g,'-').split('-');
+  if (m.length >= 2) return {from: m[0].trim(), to: m[m.length-1].trim()};
+  return {from:null, to:null};
+}
 function dot(c)       { return '<span class="dot" style="background:'+c+'"></span>'; }
 function chip(t,c,b)  { return '<span class="chip" style="color:'+c+';background:'+b+'">'+t+'</span>'; }
 function lrow(l,r)    { return '<div class="list-row">'+l+'<span class="rv">'+r+'</span></div>'; }
@@ -414,7 +442,9 @@ function render() {
   active.forEach(function(p) {
     (p.posts||[]).forEach(function(pp) {
       if (pp.post && !pp.isBreak && byPost[pp.post] !== undefined) {
-        byPost[pp.post].push(sn(p.name));
+        if (isActive(pp.from, pp.to)) {
+          byPost[pp.post].push(sn(p.name));
+        }
       }
     });
   });
@@ -441,8 +471,13 @@ function render() {
 
   document.getElementById('primary-task-area').innerHTML = ptHTML;
 
-  // ── Secondary Tasks — only show tasks with an assigned officer ──
-  var activeTasks = tasks.filter(function(t){ return t.callSign && t.callSign.trim(); });
+  // ── Secondary Tasks — only show tasks active right now based on time field ──
+  var activeTasks = tasks.filter(function(t) {
+    if (!t.callSign || !t.callSign.trim()) return false;
+    if (!t.time || !t.time.trim()) return true; // no time = always active
+    var range = parseTimeRange(t.time);
+    return isActive(range.from, range.to);
+  });
   document.getElementById('sec-task-sub').textContent = activeTasks.length ? '('+activeTasks.length+')' : '';
   document.getElementById('tasks-list').innerHTML = activeTasks.length
     ? activeTasks.map(function(t){ return taskCard(t, false); }).join('')
