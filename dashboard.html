@@ -143,10 +143,11 @@ html, body {
 .oc-rank  { font-size: 10px; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: .05em; }
 .oc-name  { font-size: 13px; font-weight: 600; color: #b0c4d8; }
 .oc-name.sup { color: #b07ad8; }
-.oc-cards { display: flex; gap: 5px; flex-wrap: wrap; }
+.oc-cards { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
 .oc-sub {
-  background: rgba(0,0,0,0.25); border: 1px solid var(--border2);
-  border-radius: 4px; padding: 4px 8px; display: flex; flex-direction: column; gap: 2px;
+  background: rgba(0,0,0,0.3); border: 1px solid var(--border2);
+  border-radius: 4px; padding: 3px 8px;
+  display: flex; align-items: center; gap: 5px; white-space: nowrap;
 }
 .oc-sub-label { font-size: 9px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
 .oc-sub-val   { font-size: 11px; color: var(--dim); }
@@ -501,36 +502,27 @@ function render(){
     var rank    = RANK_MAP[p.role]||p.role||'';
     var nameCls = isSup?'oc-name sup':'oc-name';
 
-    // Posts sub-card
-    var postContent = isBreak
-      ? '<div class="oc-sub-val break">On Break</div>'
-      : posts.length
-        ? posts.map(function(pp){
-            var t = pp.post+(pp.from&&pp.to?' ('+pp.from+'–'+pp.to+')':'');
-            return '<div class="oc-sub-val post">'+t+'</div>';
-          }).join('')
-        : '<div class="oc-sub-val" style="opacity:.5">No post</div>';
-
-    // Equipment sub-card — only show assigned items
-    var equip = [];
-    if(p.radio)    equip.push('R: '+p.radio);
-    if(p.key)      equip.push('K: '+p.key);
-    if(p.recorder) equip.push('Rec: '+p.recorder);
-    if(p.badge)    equip.push('B: '+p.badge);
-    var equipContent = equip.length
-      ? equip.map(function(e){return '<div class="oc-sub-val">'+e+'</div>';}).join('')
-      : '<div class="oc-sub-val" style="opacity:.5">None</div>';
-
+    // Individual horizontal sub-cards
+    var subCards = [];
+    if(isBreak){
+      subCards.push('<div class="oc-sub"><span class="oc-sub-label">Status</span><span class="oc-sub-val break">On Break</span></div>');
+    } else {
+      posts.forEach(function(pp){
+        var t = pp.post+(pp.from&&pp.to?' '+pp.from+'–'+pp.to:'');
+        subCards.push('<div class="oc-sub"><span class="oc-sub-label">Post</span><span class="oc-sub-val post">'+t+'</span></div>');
+      });
+    }
+    if(p.radio)    subCards.push('<div class="oc-sub"><span class="oc-sub-label">Radio</span><span class="oc-sub-val">'+p.radio+'</span></div>');
+    if(p.key)      subCards.push('<div class="oc-sub"><span class="oc-sub-label">Key</span><span class="oc-sub-val">'+p.key+'</span></div>');
+    if(p.recorder) subCards.push('<div class="oc-sub"><span class="oc-sub-label">Rec</span><span class="oc-sub-val">'+p.recorder+'</span></div>');
+    if(p.badge)    subCards.push('<div class="oc-sub"><span class="oc-sub-label">Badge</span><span class="oc-sub-val">'+p.badge+'</span></div>');
     rhtml+=
       '<div class="officer-card '+cls+'">'+
         '<div class="oc-name-row">'+
           (rank?'<span class="oc-rank">'+rank+'</span>':'')+
           '<span class="'+nameCls+'">'+sn(p.name)+'</span>'+
         '</div>'+
-        '<div class="oc-cards">'+
-          '<div class="oc-sub"><div class="oc-sub-label">Post</div>'+postContent+'</div>'+
-          '<div class="oc-sub"><div class="oc-sub-label">Equipment</div>'+equipContent+'</div>'+
-        '</div>'+
+        (subCards.length?'<div class="oc-cards">'+subCards.join('')+'</div>':'')+
       '</div>';
   });
   document.getElementById('roster-wrap').innerHTML=rhtml||
