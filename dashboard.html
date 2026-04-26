@@ -423,9 +423,24 @@ function render(){
 
   var active    = personnel.filter(function(p){return p.name;});
   var allRadios = supRadios.concat(offRadios).concat(otherRadios);
+
+  // Build active name lookup early — needed for accurate radio counts
+  var activeNames={};
+  active.forEach(function(p){if(p.name)activeNames[p.name.trim().toLowerCase()]=true;});
+  function isOnDuty(a){
+    if(!a)return false;
+    var al=a.trim().toLowerCase();
+    if(activeNames[al])return true;
+    var parts=al.split(/[,\s]+/);
+    for(var i=0;i<parts.length;i++)
+      for(var k in activeNames)
+        if(k.indexOf(parts[i])>=0&&parts[i].length>2)return true;
+    return false;
+  }
+
   var onBreak   = active.filter(function(p){return p.posts&&p.posts.some(function(x){return x.isBreak;});}).length;
   var onPost    = active.filter(function(p){return p.posts&&p.posts.some(function(x){return x.post&&!x.isBreak;});}).length;
-  var radiosOut = allRadios.filter(function(r){return r.assignedTo&&!r.oos;}).length;
+  var radiosOut = allRadios.filter(function(r){return r.assignedTo&&!r.oos&&isOnDuty(r.assignedTo);}).length;
   var radiosOOS = allRadios.filter(function(r){return r.oos;}).length;
   var keysOut   = secKeys.filter(function(k){return k.assignedTo&&!k.oos;}).length;
   var keysOOS   = secKeys.filter(function(k){return k.oos;}).length;
@@ -521,20 +536,6 @@ function render(){
   document.getElementById('tasks-list').innerHTML=activeTasks.length
     ?activeTasks.map(taskCard).join('')
     :'<div class="no-data">No active tasks</div>';
-
-  // Active names for radio duty check
-  var activeNames={};
-  active.forEach(function(p){if(p.name)activeNames[p.name.trim().toLowerCase()]=true;});
-  function isOnDuty(a){
-    if(!a)return false;
-    var al=a.trim().toLowerCase();
-    if(activeNames[al])return true;
-    var parts=al.split(/[,\s]+/);
-    for(var i=0;i<parts.length;i++)
-      for(var k in activeNames)
-        if(k.indexOf(parts[i])>=0&&parts[i].length>2)return true;
-    return false;
-  }
 
   var SUP_OTHER_IDS=['95','97','99'];
   var supOtherRadios=otherRadios.filter(function(r){return SUP_OTHER_IDS.indexOf(String(r.id))>=0;});
