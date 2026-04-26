@@ -3177,51 +3177,45 @@ var FOM_REGISTRATION_URL = '/';
     return h>=7&&h<15?'Morning':h>=15&&h<23?'Evening':'Night';
   }
   function checkStaleAndReset(){
-    // Don't check until initial pull is done — prevents false resets on new login
+    // Don't check until initial pull is done
     if(!sessionStorage.getItem('fom_initial_pull_done')) return;
     var today=_fomLocalDate();
     var curShift=getCurrentShift();
     var storedDate=localStorage.getItem('fom_currentDate');
-    
-    // 1) If stored date is not today → stale from yesterday, reset
+
+    // 1) Date changed → always reset
     if(storedDate && storedDate!==today){
       console.log('[FOM-RESET] Date changed: '+storedDate+' → '+today);
       doReset(today,curShift);
       return;
     }
-    
-    // 2) Only reset on shift change if fom_shift was explicitly set by the user.
-    //    Never reset based on the shift_marker alone — that prevented officers
-    //    from working across shift boundaries (e.g. overlap, late start).
+
+    // 2) Shift change — use fom_shift (user-selected) as source of truth
     var userShift = localStorage.getItem('fom_shift') || '';
-    if(!userShift) return; // user hasn't set a shift yet, nothing to reset
-    
-    // Only auto-reset if the user-selected shift is a full period behind the
-    // current clock shift AND the date hasn't changed (caught above). This
-    // prevents the common case of a supervisor starting setup before the shift
-    // boundary from triggering a wipe.
-    var shiftOrder = {Morning:0, Evening:1, Night:2};
-    if(shiftOrder[userShift] === undefined || shiftOrder[curShift] === undefined) return;
-    
-    // Consider a shift stale only when the clock has moved TWO slots forward,
-    // i.e. a full shift has passed. One slot of difference is normal overlap.
-    var diff = (shiftOrder[curShift] - shiftOrder[userShift] + 3) % 3;
-    if(diff < 2) return; // within normal overlap range — do not reset
-    
-    // Verify there's actual data to clear (not already empty)
+    if(!userShift) return;
+    if(userShift === curShift) return; // same shift, nothing to do
+
+    // Grace period: wait 45 minutes into the new clock shift before resetting.
+    // This allows supervisors to set up the next shift before the boundary,
+    // and prevents false resets during the first few minutes of crossover.
+    var h = _fomETHour();
+    var m = (new Date()).getMinutes();
+    var minutesIntoShift;
+    if(curShift==='Morning')  minutesIntoShift = (h-7)*60+m;
+    else if(curShift==='Evening') minutesIntoShift = (h-15)*60+m;
+    else minutesIntoShift = (h>=23?(h-23)*60+m:(h+1)*60+m); // Night: 23:00+
+    if(minutesIntoShift < 45) return; // still in grace period
+
+    // Verify there's actual data to clear
     var hasData=false;
     try{
-      var pers=localStorage.getItem('fom_personnel');
-      if(pers){
-        var p=JSON.parse(pers);
-        hasData=p.some(function(x){return x.name});
-      }
+      var pers=JSON.parse(localStorage.getItem('fom_personnel')||'[]');
+      hasData=pers.some(function(x){return x.name;});
     }catch(e){}
-    
-    if(hasData){
-      console.log('[FOM-RESET] Shift stale: '+userShift+' → '+curShift);
-      doReset(today,curShift);
-    }
+    if(!hasData) return;
+
+    console.log('[FOM-RESET] Shift changed: '+userShift+' → '+curShift+' ('+minutesIntoShift+'min in)');
+    doReset(today,curShift);
   }
   
   function doReset(today,shift){
