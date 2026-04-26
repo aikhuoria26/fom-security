@@ -196,13 +196,17 @@ html, body {
 .no-data { font-size: 12px; color: var(--dim); padding: 8px 0; }
 
 /* ── ROW 1: roster drives height, tasks scroll internally ── */
+.r-3 { align-items: stretch; } /* all cells same height as tallest */
 .r-3 .d-card {
   display: flex; flex-direction: column;
-  /* No max-height — roster grows freely with each entry */
 }
-/* Roster grows with content, never scrolls */
-#roster-wrap { flex: 1; }
-/* Primary and secondary fill the same height as the roster and scroll if needed */
+/* Roster: no height cap, grows with each officer entry */
+#roster-wrap { flex: unset; overflow-y: visible; }
+/* Task cards: constrained to the grid-cell height set by the roster, scroll inside */
+.r-3 .d-card:nth-child(2),
+.r-3 .d-card:nth-child(3) {
+  overflow: hidden;
+}
 #primary-task-area { overflow-y: auto; flex: 1; min-height: 0; }
 .task-list#tasks-list { overflow-y: auto; flex: 1; min-height: 0; }
 
