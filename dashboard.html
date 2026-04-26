@@ -198,11 +198,13 @@ html, body {
 /* ── ROW 1: roster drives height, tasks scroll internally ── */
 .r-3 .d-card {
   display: flex; flex-direction: column;
-  max-height: calc(100vh - 290px);
+  /* No max-height — roster grows freely with each entry */
 }
-#roster-wrap { overflow-y: auto; flex: 1; }
-#primary-task-area { overflow-y: auto; flex: 1; }
-.task-list#tasks-list { overflow-y: auto; flex: 1; }
+/* Roster grows with content, never scrolls */
+#roster-wrap { flex: 1; }
+/* Primary and secondary fill the same height as the roster and scroll if needed */
+#primary-task-area { overflow-y: auto; flex: 1; min-height: 0; }
+.task-list#tasks-list { overflow-y: auto; flex: 1; min-height: 0; }
 
 /* ── OOS BAR ── */
 #oos-bar {
