@@ -365,6 +365,14 @@ function supShiftTime(s){return s==='Morning'?'0645-1445':s==='Evening'?'1445-22
 function ofcShiftTime(s){return s==='Morning'?'0700-1500':s==='Evening'?'1500-2300':s==='Night'?'2300-0700':''}
 function ln(n){if(!n)return'';var s=n.trim();if(s.indexOf(',')!==-1)return s.split(',')[0].trim();var p=s.split(/\s+/);return p[p.length-1]}
 function findCS(cs){return ROSTER.find(function(r){return (r.callSign&&r.callSign===cs)||(r.name&&r.name===cs)})||null}
+function categoryFor(cs){
+  if(!cs)return 'Officer';
+  if(cs.startsWith('DV-'))return 'Developer';
+  if(cs.startsWith('SC-')||cs.startsWith('E-')||cs.startsWith('M-')||cs.startsWith('L-')||cs.startsWith('O-')||cs.startsWith('P-'))return 'Exclude';
+  var m=cs.match(/^S-(\d+)$/);
+  if(m){var n=parseInt(m[1]);return(n>=1&&n<=8)?'Supervisor':'Officer';}
+  return 'Officer';
+}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function allOnDuty(){return D.supervisors.filter(function(s){return s.cs}).concat(D.officers.filter(function(o){return o.cs}))}
 
@@ -379,20 +387,24 @@ function personCard(arr,idx,type){
   h+='<select class="field fs" style="font-weight:800;color:#fbbf24;text-align:center" onchange="pick(\''+type+'\','+idx+',this.value)">';
   h+='<option value="">Select</option>';
   ROSTER.forEach(function(p){
+    var cat=categoryFor(p.callSign);
+    if(cat==='Exclude')return;
+    if(type==='sup'&&cat!=='Supervisor')return;
+    if(type==='ofc'&&cat==='Supervisor')return;
     var display=p.callSign?(p.callSign+(p.name?' — '+ln(p.name):'')):(p.name||'?');
     var val=p.callSign||p.name||'';
     h+='<option value="'+esc(val)+'"'+(o.cs===val?' selected':'')+'>'+esc(display)+'</option>';
   });
   h+='</select>';
   h+='<div style="font-size:14px;color:#e2e8f0;padding:6px 8px;background:rgba(255,255,255,0.04);border:1px solid #1e3a5f;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(r?r.name:'<span style=\'color:#475569\'>Name</span>')+'</div>';
-  h+='<input class="field fs" value="'+esc(o.time||'')+'" placeholder="Shift" oninput="D.'+(type==='sup'?'supervisors':'officers')+'['+idx+'].time=this.value;as()">';
-  h+='<button class="rm" onclick="D.'+(type==='sup'?'supervisors':'officers')+'.splice('+idx+',1);render()">✕</button>';
+  h+='<input class="field fs" value="'+esc(o.time||'')+'" placeholder="Shift" oninput="X.'+(type==='sup'?'supervisors':'officers')+'['+idx+'].time=this.value;as()">';
+  h+='<button class="rm" onclick="X.'+(type==='sup'?'supervisors':'officers')+'.splice('+idx+',1);render()">✕</button>';
   h+='</div>';
 
   // OIC checkbox
   h+='<div style="margin-bottom:8px;display:flex;align-items:center;gap:8px">';
   h+='<label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 10px;border-radius:8px;border:1px solid '+(o.isOIC?'#c9a84c':'#1e3a5f')+';background:'+(o.isOIC?'rgba(201,168,76,0.15)':'rgba(255,255,255,0.03)')+'">';
-  h+='<input type="checkbox" '+(o.isOIC?'checked':'')+' oninput="D.'+(type==='sup'?'supervisors':'officers')+'['+idx+'].isOIC=this.checked;render();as()" style="accent-color:#c9a84c">';
+  h+='<input type="checkbox" '+(o.isOIC?'checked':'')+' oninput="X.'+(type==='sup'?'supervisors':'officers')+'['+idx+'].isOIC=this.checked;render();as()" style="accent-color:#c9a84c">';
   h+='<span style="font-size:12px;font-weight:700;color:'+(o.isOIC?'#c9a84c':'#64748b')+'">⭐ Assigned as OIC</span>';
   h+='</label>';
   h+='</div>';
@@ -425,15 +437,15 @@ function personCard(arr,idx,type){
   if(!o.tasks)o.tasks=[];
   o.tasks.forEach(function(t,ti){
     h+='<div class="sec-row">';
-    h+='<select class="field fs" onchange="D.'+(type==='sup'?'supervisors':'officers')+'['+idx+'].tasks['+ti+'].taskId=this.value;as()">';
+    h+='<select class="field fs" onchange="X.'+(type==='sup'?'supervisors':'officers')+'['+idx+'].tasks['+ti+'].taskId=this.value;as()">';
     h+='<option value="">— Task —</option>';
     SECONDARY_TASKS.forEach(function(st){h+='<option value="'+st.id+'"'+(t.taskId===st.id?' selected':'')+'>'+st.label+'</option>'});
     h+='</select>';
-    h+='<input class="field fs" placeholder="Time" value="'+esc(t.time||'')+'" oninput="D.'+(type==='sup'?'supervisors':'officers')+'['+idx+'].tasks['+ti+'].time=this.value;as()">';
-    h+='<button onclick="D.'+(type==='sup'?'supervisors':'officers')+'['+idx+'].tasks.splice('+ti+',1);as();render()" title="Remove task" style="background:none;color:#9ca3af;border:none;font-size:14px;cursor:pointer;font-weight:600;padding:2px 4px;flex-shrink:0;opacity:0.6" onmouseover="this.style.color=\'#ef4444\';this.style.opacity=\'1\'" onmouseout="this.style.color=\'#9ca3af\';this.style.opacity=\'0.6\'">✕</button>';
+    h+='<input class="field fs" placeholder="Time" value="'+esc(t.time||'')+'" oninput="X.'+(type==='sup'?'supervisors':'officers')+'['+idx+'].tasks['+ti+'].time=this.value;as()">';
+    h+='<button onclick="X.'+(type==='sup'?'supervisors':'officers')+'['+idx+'].tasks.splice('+ti+',1);as();render()" title="Remove task" style="background:none;color:#9ca3af;border:none;font-size:14px;cursor:pointer;font-weight:600;padding:2px 4px;flex-shrink:0;opacity:0.6" onmouseover="this.style.color=\'#ef4444\';this.style.opacity=\'1\'" onmouseout="this.style.color=\'#9ca3af\';this.style.opacity=\'0.6\'">✕</button>';
     h+='</div>';
   });
-  h+='<button class="add-btn" style="margin-top:4px;padding:4px 10px;font-size:11px" onclick="D.'+(type==='sup'?'supervisors':'officers')+'['+idx+'].tasks.push({taskId:\'\',time:\'\'});render()">+ Task</button>';
+  h+='<button class="add-btn" style="margin-top:4px;padding:4px 10px;font-size:11px" onclick="X.'+(type==='sup'?'supervisors':'officers')+'['+idx+'].tasks.push({taskId:\'\',time:\'\'});render()">+ Task</button>';
   h+='</div>';
 
   // Break (inside card)
@@ -443,7 +455,7 @@ function personCard(arr,idx,type){
   h+='<label class="fl">Time</label>';
   h+='<input class="field fs" placeholder="e.g. 1200" value="'+esc(o.brk.time||'')+'" oninput="setBrkTime(\''+type+'\','+idx+',this.value)">';
   h+='<label class="fl">Covered By</label>';
-  h+='<select class="field fs" onchange="D.'+(type==='sup'?'supervisors':'officers')+'['+idx+'].brk.coveredBy=this.value;as()">';
+  h+='<select class="field fs" onchange="X.'+(type==='sup'?'supervisors':'officers')+'['+idx+'].brk.coveredBy=this.value;as()">';
   h+='<option value="">— Select —</option>';
   h+='<option value="Self"'+(o.brk.coveredBy==='Self'?' selected':'')+'>Self</option>';
   allOnDuty().forEach(function(d){
@@ -741,7 +753,7 @@ function calcBreakEnd(startTime){
   return String(h).padStart(2,'0')+String(m).padStart(2,'0');
 }
 function setBrkTime(type,idx,val){
-  var arr=type==='sup'?D.supervisors:D.officers;
+  var arr=type==='sup'?X.supervisors:X.officers;
   arr[idx].brk.time=val;
   arr[idx].brk.endTime=val?calcBreakEnd(val):'';
   as();
