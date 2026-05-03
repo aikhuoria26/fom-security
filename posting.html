@@ -398,7 +398,7 @@ function personCard(arr,idx,type){
   h+='</select>';
   h+='<div style="font-size:14px;color:#e2e8f0;padding:6px 8px;background:rgba(255,255,255,0.04);border:1px solid #1e3a5f;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(r?r.name:'<span style=\'color:#475569\'>Name</span>')+'</div>';
   h+='<input class="field fs" value="'+esc(o.time||'')+'" placeholder="Shift" oninput="X.'+(type==='sup'?'supervisors':'officers')+'['+idx+'].time=this.value;as()">';
-  h+='<button class="rm" onclick="X.'+(type==='sup'?'supervisors':'officers')+'.splice('+idx+',1);render()">✕</button>';
+  h+='<button class="rm" onclick="X.'+(type==='sup'?'supervisors':'officers')+'.splice('+idx+',1);as();render()">✕</button>';
   h+='</div>';
 
   // OIC checkbox
@@ -649,16 +649,16 @@ function silentPostingPush(){
 function as(){clearTimeout(window._at);window._at=setTimeout(function(){if(_activeTab==='next'){try{localStorage.setItem('fom_daily_posting_next',JSON.stringify(N));}catch(e){}}else{try{localStorage.setItem('fom_daily_posting',JSON.stringify(D));localStorage.setItem('fom_posting_lmt',String(Date.now()));silentPostingPush()}catch(e){}}},500)}
 
 function updateShift(newShift){
-  var oldShift=D.shift;
-  D.shift=newShift;
+  var oldShift=X.shift;
+  X.shift=newShift;
   // Update all supervisor times
   var supTime=supShiftTime(newShift);
-  D.supervisors.forEach(function(s){
+  X.supervisors.forEach(function(s){
     if(!s.time||s.time===supShiftTime(oldShift))s.time=supTime;
   });
   // Update all officer times
   var ofcTime=ofcShiftTime(newShift);
-  D.officers.forEach(function(o){
+  X.officers.forEach(function(o){
     if(!o.time||o.time===ofcShiftTime(oldShift))o.time=ofcTime;
   });
   render();as();
