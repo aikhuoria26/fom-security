@@ -649,6 +649,7 @@ function silentPostingPush(){
 function as(){clearTimeout(window._at);window._at=setTimeout(function(){if(_activeTab==='next'){try{localStorage.setItem('fom_daily_posting_next',JSON.stringify(N));}catch(e){}}else{try{localStorage.setItem('fom_daily_posting',JSON.stringify(D));localStorage.setItem('fom_posting_lmt',String(Date.now()));silentPostingPush()}catch(e){}}},500)}
 
 function updateShift(newShift){
+  X=activeData();window.X=X;
   var oldShift=X.shift;
   X.shift=newShift;
   // Update all supervisor times
