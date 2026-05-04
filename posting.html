@@ -654,14 +654,10 @@ function updateShift(newShift){
   X.shift=newShift;
   // Update all supervisor times
   var supTime=supShiftTime(newShift);
-  X.supervisors.forEach(function(s){
-    if(!s.time||s.time===supShiftTime(oldShift))s.time=supTime;
-  });
+  X.supervisors.forEach(function(s){ s.time=supTime; });
   // Update all officer times
   var ofcTime=ofcShiftTime(newShift);
-  X.officers.forEach(function(o){
-    if(!o.time||o.time===ofcShiftTime(oldShift))o.time=ofcTime;
-  });
+  X.officers.forEach(function(o){ o.time=ofcTime; });
   render();as();
 }
 
