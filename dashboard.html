@@ -110,6 +110,16 @@ html, body {
 .r-3   { grid-template-columns: 1.5fr 1fr 1fr; }
 .r-3b  { grid-template-columns: 1fr 1fr 1fr; }
 .r-2   { grid-template-columns: 1fr 1fr; }
+.r-2b  { grid-template-columns: 1fr 1fr; }
+
+/* Notes + break schedule */
+.notes-body { font-size: 12px; color: var(--dim); line-height: 1.7; overflow-y: auto; max-height: 140px; }
+.notes-body p { margin: 0 0 4px; }
+.break-list { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; max-height: 140px; }
+.break-row { display: flex; align-items: center; gap: 8px; padding: 5px 8px; background: rgba(230,126,34,0.07); border: 1px solid rgba(230,126,34,0.18); border-radius: 4px; }
+.break-time { font-size: 12px; font-weight: 700; color: var(--amber); min-width: 42px; }
+.break-who  { font-size: 12px; color: #94b8d8; flex: 1; }
+.break-cov  { font-size: 11px; color: var(--subtle); }
 
 /* ── CARD ── */
 .d-card {
@@ -137,7 +147,7 @@ html, body {
   display: flex; flex-direction: column; gap: 5px;
 }
 .officer-card.on-post  { border-left-color: var(--green); }
-.officer-card.on-break { border-left-color: var(--amber); }
+.officer-card.on-break { border-left-color: var(--amber); background: rgba(230,126,34,0.09); border: 1px solid rgba(230,126,34,0.28); border-left: 3px solid var(--amber); }
 .officer-card.is-sup   { border-left-color: var(--purple); }
 .oc-name-row { display: flex; align-items: baseline; gap: 6px; }
 .oc-rank  { font-size: 10px; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: .05em; }
@@ -313,8 +323,8 @@ html, body {
       </div>
     </div>
 
-    <!-- ROW 3: Recorders | Other Radios | Access -->
-    <div class="dash-row r-3b">
+    <!-- ROW 3: Recorders | Other Radios (removed Access & Other Items) -->
+    <div class="dash-row r-2b">
       <div class="d-card">
         <div class="d-card-title">Recorders <span class="d-card-sub" id="rec-sub"></span></div>
         <div class="eq-grid" id="rec-grid"></div>
@@ -323,9 +333,17 @@ html, body {
         <div class="d-card-title">Management &amp; Other Radios <span class="d-card-sub" id="other-radio-sub"></span></div>
         <div class="eq-grid" id="other-radio-grid"></div>
       </div>
+    </div>
+
+    <!-- ROW 4: Shift Notes | Break Schedule -->
+    <div class="dash-row r-2b">
       <div class="d-card">
-        <div class="d-card-title">Access &amp; Other Items</div>
-        <div id="other-items-list"></div>
+        <div class="d-card-title">Shift Notes <span class="d-card-sub" id="notes-sub"></span></div>
+        <div class="notes-body" id="notes-body"><div class="no-data">No notes for this shift.</div></div>
+      </div>
+      <div class="d-card">
+        <div class="d-card-title">Break Schedule <span class="d-card-sub" id="break-sub"></span></div>
+        <div class="break-list" id="break-list"><div class="no-data">No breaks scheduled.</div></div>
       </div>
     </div>
 
@@ -553,14 +571,11 @@ function render(){
       }).join('')+'</div>'
     :'<div class="no-data">No active assignments</div>';
 
-  // Secondary Tasks
+  // Secondary Tasks — show for anyone on duty, not just those with active posts
   var activeCS={};
   active.forEach(function(p){
-    var cs=normCS(p.callSign);if(!cs)return;
-    (p.posts||[]).forEach(function(pp){
-      if(pp.post&&!pp.isBreak&&PRIMARY_POSTS.indexOf(pp.post)>=0&&isActive(pp.from,pp.to))
-        activeCS[cs]=true;
-    });
+    var cs=normCS(p.callSign);
+    if(cs)activeCS[cs]=true;
   });
   var activeTasks=tasks.filter(function(t){
     return t.callSign&&t.callSign.trim()&&activeCS[normCS(t.callSign)]===true;
@@ -622,13 +637,39 @@ function render(){
   document.getElementById('other-radio-sub').textContent=otherOut+' assigned';
   renderEqGrid('other-radio-grid',remainingOtherRadios.map(radioCard));
 
-  var okeys =otherKeys.filter(function(k){return!k.available&&k.assignedTo;}).length;
-  var obadge=accessBadges.filter(function(a){return!a.available&&!a.oos;}).length;
-  var osat  =satPhones.filter(function(s){return!s.available&&!s.oos;}).length;
-  document.getElementById('other-items-list').innerHTML=
-    lrow(ldot('var(--blue)')+'<span class="lf">Other keys out</span>',okeys)+
-    lrow(ldot('var(--blue)')+'<span class="lf">Access badges out</span>',obadge)+
-    lrow(ldot('var(--blue)')+'<span class="lf">Sat phones out</span>',osat);
+  // Shift Notes
+  var notesRaw=ls('fom_notes',[]);
+  var notesArr=Array.isArray(notesRaw)?notesRaw:(typeof notesRaw==='string'?notesRaw.split('\n').filter(Boolean):[]);
+  document.getElementById('notes-sub').textContent=notesArr.length?'('+notesArr.length+')':'';
+  document.getElementById('notes-body').innerHTML=notesArr.length
+    ?notesArr.map(function(n){return'<p>'+String(n)+'</p>';}).join('')
+    :'<div class="no-data">No notes for this shift.</div>';
+
+  // Break Schedule
+  var allBreaks=[];
+  active.forEach(function(p){
+    (p.posts||[]).forEach(function(pp){
+      if(pp.isBreak||pp.post==='Break'){
+        allBreaks.push({time:pp.from||pp.time||'',endTime:pp.to||pp.endTime||'',name:sn(p.name),coveredBy:pp.coveredBy||''});
+      }
+    });
+    if(p.brk&&p.brk.time){
+      allBreaks.push({time:p.brk.time,endTime:p.brk.endTime||'',name:sn(p.name),coveredBy:p.brk.coveredBy||''});
+    }
+  });
+  allBreaks.sort(function(a,b){return (parseMins(a.time)||0)-(parseMins(b.time)||0);});
+  document.getElementById('break-sub').textContent=allBreaks.length?'('+allBreaks.length+')':'';
+  document.getElementById('break-list').innerHTML=allBreaks.length
+    ?allBreaks.map(function(b){
+        var timeStr=b.time?(b.time+(b.endTime?'–'+b.endTime:'')):'TBD';
+        var covStr=b.coveredBy?' · Cov: '+b.coveredBy:'';
+        return'<div class="break-row">'+
+          '<span class="break-time">'+timeStr+'</span>'+
+          '<span class="break-who">'+b.name+'</span>'+
+          (covStr?'<span class="break-cov">'+covStr+'</span>':'')+
+        '</div>';
+      }).join('')
+    :'<div class="no-data">No breaks scheduled.</div>';
 
   var oosBar=document.getElementById('oos-bar');
   if(totalOOS>0){
